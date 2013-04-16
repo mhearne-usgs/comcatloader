@@ -11,6 +11,9 @@ import importlib
 import quakeml
 
 TIMEFMT = '%Y-%m-%d %H:%M:%S'
+DEFAULT_START = datetime.datetime(1000,1,1)
+DEFAULT_END = datetime.datetime(3000,1,1)
+
 
 def processEvent(quake,event,origins,events,numevents,ievent):
     filename = None
@@ -94,7 +97,9 @@ def main(options,args):
     triggersource = None
     method = None
     ptype = 'origin'
-    folder = datetime.datetime.strftime('%Y%m%d%H%M%S')
+    startdate = DEFAULT_START
+    enddate = DEFAULT_END
+    folder = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     if options.author is not None:
         author = options.author
     if options.agency is not None:
@@ -107,6 +112,18 @@ def main(options,args):
         folder = options.folder
     if options.triggersource is not None:
         triggersource = options.triggersource
+    if options.beginDate is not None:
+        try:
+            startdate = datetime.datetime.strptime(options.beginDate,'%Y%m%d')
+        except:
+            print 'Could not parse start date "%s"' % options.beginDate
+            sys.exit(1)
+    if options.endDate is not None:
+        try:
+            enddate = datetime.datetime.strptime(options.endDate,'%Y%m%d')
+        except:
+            print 'Could not parse end date "%s"' % options.endDate
+            sys.exit(1)
     if options.producttype is not None:
         types = [quakeml.ORIGIN,quakeml.FOCAL,quakeml.TENSOR]
         ptype = options.producttype
@@ -126,7 +143,8 @@ def main(options,args):
     #parse the input data from file, database, webserver, whatever
     xmlfiles = []
     numevents = 0
-    for event in module.getEvents(args[1:]):
+    #the module getEvents() function doesn't have to do anything with the startDate and endDate parameters
+    for event in module.getEvents(args[1:],startDate=startdate,endDate=enddate):
         xmlfile = os.path.join(folder,'%s.xml' % event['id'])
         if os.path.isfile(xmlfile):
             xmlfiles.append(xmlfile)
@@ -170,7 +188,14 @@ if __name__ == '__main__':
     parser.add_option("-l", "--load", dest="load",default=False,action="store_true",
                   help="Load catalog of created XML into ComCat")
     parser.add_option("-f", "--folder", dest="folder",
-                  help="Set folder for output QuakeML, appended to config output folder.  Defaults to current date/time", metavar="FOLDER")
+                  help="""Set folder for output QuakeML, appended to config output folder.  
+    Defaults to current date/time""", metavar="FOLDER")
+    parser.add_option("-b", "--beginDate", dest="beginDate",
+                  help="""Specify starting date for loading from input catalog
+    (YYYYMMDD) (defaults to 18000101)""",metavar="BEGINDATE")
+    parser.add_option("-e", "--endDate", dest="endDate",
+                  help="""Specify ending date for loading from input catalog
+    (YYYYMMDD) (defaults to 30000101)""",metavar="ENDDATE")
     parser.add_option("-p", "--producttype", dest="producttype",
                   help="Define type of product (one of %s) (default to %s)" % (','.join(types),quakeml.ORIGIN), 
                   metavar="PRODUCTTYPE")

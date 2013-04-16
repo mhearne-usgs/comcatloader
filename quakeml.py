@@ -222,7 +222,7 @@ class QuakeML(object):
         #load a config file
         configfile = os.path.join(homedir,'config.ini')
         if not os.path.isfile(configfile):
-            raise Exception('Config file config.ini not found in %s.' % (homedir)
+            raise Exception('Config file config.ini not found in %s.' % (homedir))
         self.config = ConfigParser.RawConfigParser()
         self.config.read(configfile)
         
@@ -236,7 +236,7 @@ class QuakeML(object):
         self.source = source
         self.method = method
         self.triggersource = triggersource
-        self.xmlfolder = os.path.join(config.get('OUTPUT','folder'),xmlfolder)
+        self.xmlfolder = os.path.join(self.config.get('OUTPUT','folder'),xmlfolder)
         if not os.path.isdir(xmlfolder):
             try:
                 os.makedirs(xmlfolder)
