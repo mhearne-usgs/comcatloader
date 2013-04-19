@@ -59,18 +59,32 @@ class NDKReader(MTReader):
     def trimFields(self,tdict):
         record = {}
         record['id'] = tdict['eventTime'].strftime('%Y%m%d%H%M%S')
-        record['time'] = tdict['eventTime']
+        #use the derived epicenter and time as the product epicenter
         record['type'] = self.type
-        record['lat'] = tdict['eventLatitude']
-        record['lon'] = tdict['eventLongitude']
-        record['depth'] = tdict['eventDepth']
+        record['time'] = tdict['derivedEventTime']
+        record['lat'] = tdict['derivedEventLatitude']
+        record['lon'] = tdict['derivedEventLongitude']
+        record['depth'] = tdict['derivedEventDepth']
+
+        #call the source epicenter and time triggerlat,triggerlon, etc.
+        record['triggertime'] = tdict['eventTime']
+        record['triggerlat'] = tdict['eventLatitude']
+        record['triggerlon'] = tdict['eventLongitude']
+        record['triggerdepth'] = tdict['eventDepth']
+        
         record['mag'] = tdict['momentMagnitude']
         record['tazimuth'] = tdict['eigenVectorAzimuths'][0]
         record['tplunge'] = tdict['eigenVectorPlunges'][0]
+        record['tvalue'] = tdict['eigenVectorValues'][0]
+        
         record['nazimuth'] = tdict['eigenVectorAzimuths'][1]
         record['nplunge'] = tdict['eigenVectorPlunges'][1]
+        record['nvalue'] = tdict['eigenVectorValues'][1]
+        
         record['pazimuth'] = tdict['eigenVectorAzimuths'][2]
         record['pplunge'] = tdict['eigenVectorPlunges'][2]
+        record['pvalue'] = tdict['eigenVectorValues'][2]
+        
         record['np1strike'] = tdict['nodalPlane1Strike']
         record['np1dip'] = tdict['nodalPlane1Dip']
         record['np1rake'] = tdict['nodalPlane1Rake']
@@ -83,6 +97,7 @@ class NDKReader(MTReader):
         record['mtp'] = tdict['tensorMtp']
         record['mrp'] = tdict['tensorMrp']
         record['mrt'] = tdict['tensorMrt']
+        #record['creationtime'] = datetime.datetime.strptime(tdict['timestamp'][2:],'%Y%m%d%H%M%S')
         return record
 
     def parseLine1(self,line,tdict):
@@ -160,6 +175,7 @@ class NDKReader(MTReader):
         tdict['derivedEventDepth'] = float(line[47:53])
         tdict['derivedEventDepthError'] = float(line[53:58])
         tdict['derivedDepthType'] = line[58:61].strip()
+        tdict['timestamp'] = line[64:80]
 
     def parseLine4(self,line,tdict):
         tdict['exponent'] = float(line[0:2])
@@ -213,10 +229,16 @@ def getEvents(args,startDate=None,endDate=None):
     i = -1
     for record in ndkreader.generateRecords(startdate=startDate,enddate=endDate):
         i += 1
+        if startDate is not None:
+            if record['time'] < startDate:
+                continue
+        if endDate is not None:
+            if record['time'] > endDate:
+                continue
         yield record
 
         
 if __name__ == '__main__':
     ndkfile = sys.argv[1]
-    for record in getEvents(ndkfile):
+    for record in getEvents([ndkfile]):
         print record['time'],record['mag']

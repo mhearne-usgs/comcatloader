@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
 <q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:catalog="http://anss.org/xmlns/catalog/0.1" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
-	<eventParameters publicID="quakeml:atlas.anss.org/eventParameters/[ID]">
-		<event catalog:eventid="[ID]" catalog:eventsource="atlas" catalog:datasource="atlas" publicID="quakeml:atlas.anss.org/event/[ID]">
-			<magnitude publicID="quakeml:atlas.anss.org/magnitude/[ID]">
+	<eventParameters publicID="quakeml:us.anss.org/eventParameters/[ID]">
+		<event catalog:eventid="[ID]" catalog:eventsource="[SOURCE]" catalog:datasource="[SOURCE]" publicID="quakeml:atlas.anss.org/event/[SOURCE][ID]">
+			<magnitude publicID="quakeml:us.anss.org/magnitude/[SOURCE][ID]">
 				<mag>
-					<value>[MAGNITUDE]</value>
+					<value>[MAG]</value>
 				</mag>
-				<originID>quakeml:atlas.anss.org/origin/[ID]</originID>
+				<originID>quakeml:atlas.anss.org/origin/[SOURCE][ID]</originID>
 			</magnitude>
-			<origin publicID="quakeml:atlas.anss.org/origin/[ID]">
+			<origin publicID="quakeml:atlas.anss.org/origin/[SOURCE][ID]">
 				<time>
-					<value>[OTIME]</value>
+					<value>[TIME]</value>
 				</time>
 				<longitude>
 					<value>[LON]</value>
@@ -22,8 +22,8 @@
 					<value>[DEPTH]</value>
 				</depth>
 			</origin>
-			<preferredOriginID>quakeml:atlas.anss.org/origin/[ID]</preferredOriginID>
-			<preferredMagnitudeID>quakeml:atlas.anss.org/magnitude/[ID]</preferredMagnitudeID>
+			<preferredOriginID>quakeml:atlas.anss.org/origin/[SOURCE][ID]</preferredOriginID>
+			<preferredMagnitudeID>quakeml:atlas.anss.org/magnitude/[SOURCE][ID]</preferredMagnitudeID>
 			<type>earthquake</type>
 			<creationInfo>
 				<agencyID>atlas</agencyID>
@@ -31,7 +31,7 @@
 			</creationInfo>
 		</event>
 		<creationInfo>
-			<agencyID>atlas</agencyID>
+			<agencyID>[AGENCY]</agencyID>
 			<creationTime>[CTIME]</creationTime>
 		</creationInfo>
 	</eventParameters>

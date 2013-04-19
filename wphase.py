@@ -9,7 +9,7 @@ import os.path
 TIMEFMT = '%Y-%m-%d %H:%M:%S'
 
 #this should be a generator
-def getEvents(args):
+def getEvents(args,startDate=None,endDate=None):
     fname = args[0]
     if not os.path.isfile(fname):
         raise Exception('File %s does not exist' % fname)
@@ -26,6 +26,12 @@ def getEvents(args):
         time = parts[2]
         dtime = '%s %s' % (date,time)
         event['time'] = datetime.datetime.strptime(dtime,TIMEFMT)
+        if startDate is not None:
+            if event['time'] < startDate:
+                continue
+        if endDate is not None:
+            if event['time'] > endDate:
+                continue
         #parts[3] is the GCMT magnitude - we don't care about that here
         event['mag'] = float(parts[4])
         event['numchannels'] = int(parts[5])

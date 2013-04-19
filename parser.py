@@ -14,18 +14,61 @@ TIMEFMT = '%Y-%m-%d %H:%M:%S'
 DEFAULT_START = datetime.datetime(1000,1,1)
 DEFAULT_END = datetime.datetime(3000,1,1)
 
-
+def getSummary(event,origins,oidx):
+    fmt = '%s M%.1f (%.4f,%.4f) %.1f km'
+    tpl = (event['time'].strftime('%Y-%m-%d %H:%M:%S'),event['mag'],event['lat'],event['lon'],event['depth'])
+    eventdesc = fmt % tpl
+    summary = ''
+    if not len(origins):
+        summary = 'No ComCat origins were associated with event %s' % eventdesc
+        return summary
+    if oidx > -1:
+        summary += 'Event %s was associated with event %i:\n' % (eventdesc,oidx+1)
+        i = 1
+        for o in origins:
+            if o['mag'] is None:
+                o['mag'] = 0.0
+            fmt = '\t%i) %s M%.1f (%.4f,%.4f) %.1f km (%.1f seconds, %.1f km distance)\n'
+            if o.has_key('triggerlat'):
+                tpl = (i,o['triggertime'].strftime('%Y-%m-%d %H:%M:%S'),o['mag'],o['triggerlat'],o['triggerlon'],
+                       o['triggerdepth'],o['timedelta'],o['distance'])
+            else:
+                tpl = (i,o['time'].strftime('%Y-%m-%d %H:%M:%S'),o['mag'],o['lat'],o['lon'],o['depth'],
+                       o['timedelta'],o['distance'])
+            summary += fmt % tpl
+            i += 1
+        return summary
+    if oidx == -1:
+        summary += 'Event %s was associated with NONE of the following events:\n' % (eventdesc)
+        i = 1
+        for o in origins:
+            fmt = '\t%i) %s M%.1f (%.4f,%.4f) %.1f km (%.1f seconds, %.1f km distance)'
+            if o.has_key('triggerlat'):
+                tpl = (i,o['triggertime'].strftime('%Y-%m-%d %H:%M:%S'),o['mag'],o['triggerlat'],o['triggerlon'],
+                       o['triggerdepth'],o['timedelta'],o['distance'])
+            else:
+                tpl = (i,o['time'].strftime('%Y-%m-%d %H:%M:%S'),o['mag'],o['lat'],o['lon'],o['depth'],
+                       o['timedelta'],o['distance'])
+            summary += fmt % tpl
+            i += 1
+        return summary
+        
 def processEvent(quake,event,origins,events,numevents,ievent):
     filename = None
     norg = len(origins)
     nevents = len(events)
     eventdesc = '%s: %s M%.1f (%.4f,%.4f)' % (event['id'],str(event['time']),event['mag'],event['lat'],event['lon'])
     ofmt = '\t%i) %s M%.1f (%.4f,%.4f) %.1f km - %.1f km distance, %i seconds'
+    oidx = -1
     if norg == 1:
         quake.renderXML(event,origins[0])
         print 'Writing event %s to file (%i of %i).' % (eventdesc,ievent,numevents)
     if norg == 0:
-        print 'No events associated with %s' % eventdesc
+        if quake.type == quakeml.ORIGIN:
+            filename = quake.renderXML(event)
+            print 'No events associated with %s - rendering origin to XML' % eventdesc
+        else:
+            print 'No events associated with %s' % eventdesc            
     if norg > 1:
         fmt = 'Event %s M%.1f (%.4f,%.4f) %.1f km has %i possible associations:'
         tpl = (event['time'],event['mag'],event['lat'],event['lon'],event['depth'],norg)
@@ -35,13 +78,18 @@ def processEvent(quake,event,origins,events,numevents,ievent):
         for origin in origins:
             time = origin['time']
             mag = origin['mag']
+            if mag is None:
+                mag = 0.0
             lat = origin['lat']
             lon = origin['lon']
             depth = origin['depth']
             timedelta = origin['timedelta']
             distance = origin['distance']
             tpl = (ic,time,mag,lat,lon,depth,distance,timedelta)
-            print ofmt % tpl
+            try:
+                print ofmt % tpl
+            except:
+                pass
             ic += 1
         print '\t%i) None of the above (do not associate)' % (ic)
         nresp = 0
@@ -58,11 +106,12 @@ def processEvent(quake,event,origins,events,numevents,ievent):
         if oidx >= 0:
             if oidx < ic:
                 filename = quake.renderXML(event,origins[oidx])
+                output_origin = origins[oidx].copy()
             else:
                 print 'Not associating event, as requested.'
         else:
             print "You obviously can't read.  Moving on."
-    return filename
+    return (filename,oidx)
 
 #this should be a generator
 def getEvents():
@@ -131,8 +180,8 @@ def main(options,args):
             print '%s not in %s.  Exiting.' % (ptype,','.join(types))
             sys.exit(1)
     quake = quakeml.QuakeML(ptype,folder,agency=agency,author=author,
-                            triggersource=triggersource,method=method,timewindow=twindow,
-                            distwindow=dwindow)
+                            triggersource=triggersource,source=source,
+                            method=method,timewindow=twindow,distwindow=dwindow)
     if options.clear:
         resp = raw_input('You set the option to clear all existing QuakeML output.  Are you sure? Y/[n]')
         if resp.strip().lower() == 'y':
@@ -141,11 +190,17 @@ def main(options,args):
             print 'Not clearing QuakeML output.'
 
     #parse the input data from file, database, webserver, whatever
+    earliest = datetime.datetime(3000,1,1)
+    latest = datetime.datetime(1,1,1)
     xmlfiles = []
     numevents = 0
     #the module getEvents() function doesn't have to do anything with the startDate and endDate parameters
     for event in module.getEvents(args[1:],startDate=startdate,endDate=enddate):
-        xmlfile = os.path.join(folder,'%s.xml' % event['id'])
+        if event['time'] < earliest:
+            earliest = event['time']
+        if event['time'] > latest:
+            latest = event['time']
+        xmlfile = os.path.join(quake.xmlfolder,'%s.xml' % event['id'])
         if os.path.isfile(xmlfile):
             xmlfiles.append(xmlfile)
             continue
@@ -154,8 +209,11 @@ def main(options,args):
         
     numnear = len(quake.NearEventIndices)
     numprocessed = 0
+    summary = [] #list of events that were not associated, or were associated manually
     for event,origins,events in quake.generateEvents():
-        xmlfile = processEvent(quake,event,origins,events,numevents,numprocessed)
+        xmlfile,oidx = processEvent(quake,event,origins,events,numevents,numprocessed)
+        if len(origins) != 1:
+            summary.append(getSummary(event,origins,oidx))
         xmlfiles.append(xmlfile)
         numprocessed += 1
 
@@ -165,6 +223,15 @@ def main(options,args):
             if not res:
                 p,fname = os.path.split(xmlfile)
                 print 'Failed to send quakeML file %s. Error: "%s"' % (fname,output)
+
+    if not len(summary):
+        sys.exit(0)
+    DAYFMT = '%Y-%m-%d'
+    print
+    print 'Summary for period %s to %s:' % (earliest.strftime(DAYFMT),latest.strftime(DAYFMT))
+    for eventinfo in summary:
+        print eventinfo
+        print
         
         
 if __name__ == '__main__':

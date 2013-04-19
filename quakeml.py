@@ -237,9 +237,10 @@ class QuakeML(object):
         self.method = method
         self.triggersource = triggersource
         self.xmlfolder = os.path.join(self.config.get('OUTPUT','folder'),xmlfolder)
-        if not os.path.isdir(xmlfolder):
+        isfolder = os.path.isdir(self.xmlfolder)
+        if not isfolder:
             try:
-                os.makedirs(xmlfolder)
+                os.makedirs(self.xmlfolder)
             except Exception,expobj:
                 raise 'Could not create directory "%s"'
 
@@ -282,7 +283,26 @@ class QuakeML(object):
                 continue
             os.remove(xmlfile)
         return
-            
+
+    def clear(self):
+        self.EventList = []
+        self.Lat = []
+        self.Lon = []
+        self.Time = []
+        self.NearEventIndices = []
+        return
+
+    def hasAngles(self,eqdict):
+        reqfields = ['tazimuth','tplunge','tvalue',
+        'nazimuth','nplunge','nvalue',
+        'pazimuth','pplunge','pvalue',
+        'np1strike','np1dip','np1rake',
+        'np2strike','np2dip','np2rake']
+        for field in reqfields:
+            if not eqdict.has_key(field):
+                return False
+        return True
+        
     def add(self,eqdict):
         eqfields = eqdict.keys()
         seteqfields = set(eqfields)
@@ -304,7 +324,7 @@ class QuakeML(object):
         eqdict['author'] = self.author
         eqdict['triggersource'] = self.triggersource
 
-        if self.type == 'moment':
+        if self.type == 'moment' and not self.hasAngles(eqdict):
             eqdict = getMomentTensorAngles(eqdict)
             if not eqdict.has_key('moment'):
                 mrr = eqdict['mrr']
@@ -349,9 +369,14 @@ class QuakeML(object):
         return
 
     def associate2(self,event):
-        lat = event['lat']
-        lon = event['lon']
-        etime = event['time']
+        if event.has_key('triggerlat'):
+            lat = event['triggerlat']
+            lon = event['triggerlon']
+            etime = event['triggertime']
+        else:
+            lat = event['lat']
+            lon = event['lon']
+            etime = event['time']
         mintime = etime - datetime.timedelta(seconds=self.TimeWindow)
         maxtime = etime + datetime.timedelta(seconds=self.TimeWindow)
         tminsecs = int(timeutil.toTimeStamp(mintime)*1000)
@@ -445,7 +470,10 @@ class QuakeML(object):
             if isinstance(value,datetime.datetime):
                 value = value.strftime(TIMEFMT)
             else:
-                value = FORMATS[key] % value #use our pre-approved list of 
+                try:
+                    value = FORMATS[key] % value #use our pre-approved list of 
+                except:
+                    pass
             xmltext = xmltext.replace(macro,value)
         xmltext = self.removeUnusedMacros(xmltext)
         filename = os.path.join(self.xmlfolder,'%s.xml' % event['id'])
@@ -482,9 +510,29 @@ class QuakeML(object):
         tree.write(f,xml_declaration=False,default_namespace='')
         xmloutput = f.getvalue()
         f.close()
+
+        #There are a bunch of things that ElementTree does to the XML, all having to do with namespaces.
+        #What follows is some hacky search/replace code to undo the changes
         #I don't want the "nsX" namespace identifiers in here - nuking them with a regular expression
         pattern = 'ns[0-9]*:'
         xmloutput = re.sub(pattern,'',xmloutput)
+        
+        #there are three namespace defining attributes in the q:quakeml element.  ElementTree blows these away.
+        #let's just replace everything in the <quakeml> opening tag with the right stuff...
+        m1 = re.search('<quakeml',xmloutput)
+        m2 = re.compile('>').search(xmloutput,m1.start())
+        repltext = """<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:catalog="http://anss.org/xmlns/catalog/0.1" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">"""
+        xmloutput = xmloutput.replace(xmloutput[m1.start():m2.end()],repltext)
+
+        #ElementTree took away the "q:" namespace qualifier, so let's put it back
+        xmloutput = xmloutput.replace('<quakeml','<q:quakeml')
+        xmloutput = xmloutput.replace('</quakeml','</q:quakeml')
+
+        #The catalog: namespace qualifiers in the event tag are gone too, so lets fix that
+        xmloutput = xmloutput.replace('eventid','catalog:eventid')
+        xmloutput = xmloutput.replace('eventsource','catalog:eventsource')
+        xmloutput = xmloutput.replace('datasource','catalog:datasource')
+        
         return xmloutput
 
     def generateEvents(self):
