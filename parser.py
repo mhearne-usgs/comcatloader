@@ -249,9 +249,9 @@ if __name__ == '__main__':
     parser.add_option("-s", "--source", dest="source",
                   help="Set the source for this data", metavar="SOURCE")
     parser.add_option("-r", "--triggersource", dest="triggersource",
-                  help="Set the trigger source for this data", metavar="TRIGGERSOURCE")
+                  help="Set the trigger source for this data (what catalog should this data associate with)", metavar="TRIGGERSOURCE")
     parser.add_option("-m", "--method", dest="method",
-                  help="Set the method used to determine catalog", metavar="METHOD")
+                  help="Set the method used to determine catalog (Mww, Mwc, etc.)", metavar="METHOD")
     parser.add_option("-l", "--load", dest="load",default=False,action="store_true",
                   help="Load catalog of created XML into ComCat")
     parser.add_option("-f", "--folder", dest="folder",

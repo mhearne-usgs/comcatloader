@@ -30,7 +30,7 @@ from losspager.util import timeutil
 ORIGIN = 'origin'
 TENSOR = 'moment-tensor'
 FOCAL = 'focal-mechanism'
-TIMEFMT = '%Y-%m-%m %H:%M:%SZ'
+TIMEFMT = '%Y-%m-%mT%H:%M:%SZ'
 DEFAULT_MOMENT_METHOD = 'Mwc'
 DEFAULT_SOURCE = 'us'
 PRODUCT_TYPES = [ORIGIN,TENSOR,FOCAL]
@@ -324,19 +324,19 @@ class QuakeML(object):
         eqdict['author'] = self.author
         eqdict['triggersource'] = self.triggersource
 
-        if self.type == 'moment' and not self.hasAngles(eqdict):
+        if self.type == 'moment' and self.hasAngles(eqdict):
             eqdict = getMomentTensorAngles(eqdict)
-            if not eqdict.has_key('moment'):
-                mrr = eqdict['mrr']
-                mtt = eqdict['mtt']
-                mpp = eqdict['mpp']
-                mrt = eqdict['mrt']
-                mrp = eqdict['mrp']
-                mtp = eqdict['mtp']
-                eqdict['moment'] = calculateTotalMoment(mrr,mtt,mpp,mrt,mrp,mtp)
+        if not eqdict.has_key('moment'):
+            mrr = eqdict['mrr']
+            mtt = eqdict['mtt']
+            mpp = eqdict['mpp']
+            mrt = eqdict['mrt']
+            mrp = eqdict['mrp']
+            mtp = eqdict['mtp']
+            eqdict['moment'] = calculateTotalMoment(mrr,mtt,mpp,mrt,mrp,mtp)
             mag = calculateMagnitude(eqdict['moment'])
-            if not eqdict.has_key('mag'):
-                eqdict['mag'] = calculateMagnitude(eqdict['moment'])
+        if not eqdict.has_key('mag'):
+            eqdict['mag'] = calculateMagnitude(eqdict['moment'])
         
         self.EventList.append(eqdict)
         self.updateCloseEvents()
@@ -377,6 +377,7 @@ class QuakeML(object):
             lat = event['lat']
             lon = event['lon']
             etime = event['time']
+        APITIMEFMT = '%Y-%m-%dT%H:%M:%S.%f'
         mintime = etime - datetime.timedelta(seconds=self.TimeWindow)
         maxtime = etime + datetime.timedelta(seconds=self.TimeWindow)
         tminsecs = int(timeutil.toTimeStamp(mintime)*1000)
@@ -386,20 +387,20 @@ class QuakeML(object):
         minlon = lon - self.DistanceWindow * self.KM2DEG * (1/distance.cosd(lat))
         maxlon = lon + self.DistanceWindow * self.KM2DEG * (1/distance.cosd(lat))
         etimestr = etime.strftime(self.TIMEFMT)+'Z'
-        searchurl = 'http://comcat.cr.usgs.gov/earthquakes/feed/search.php?%s'
-        pdict = {'callback':'search',
-                 'minEventLatitude':minlat,'minEventLongitude':minlon,
-                 'maxEventLatitude':maxlat,'maxEventLongitude':maxlon,
-                 'minEventTime':tminsecs,'maxEventTime':tmaxsecs,
-                 'eventSource':self.triggersource}
+        searchurl = 'http://comcat.cr.usgs.gov/fdsnws/event/1/query?%s'
+        #searchurl = 'http://comcat.cr.usgs.gov/earthquakes/feed/search.php?%s'
+        pdict = {'minlatitude':minlat,'minlongitude':minlon,
+                 'maxlatitude':maxlat,'maxlongitude':maxlon,
+                 'starttime':mintime.strftime(APITIMEFMT),'endtime':maxtime.strftime(APITIMEFMT),
+                 'catalog':self.triggersource,'format':'geojson','eventtype':'earthquake'}
         params = urllib.urlencode(pdict)
         searchurl = searchurl % params
         origins = []
         try:
             fh = urllib2.urlopen(searchurl)
             data = fh.read()
-            data2 = data[len(pdict['callback'])+1:-2]
-            datadict = json.loads(data2)['features']
+            #data2 = data[len(pdict['callback'])+1:-2]
+            datadict = json.loads(data)['features']
             for feature in datadict:
                 eventdict = {}
                 eventdict['lon'] = feature['geometry']['coordinates'][0]

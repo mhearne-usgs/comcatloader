@@ -2,85 +2,67 @@
   <eventParameters publicID="quakeml:us.anss.org/eventParameters/[ID]/[VERSION]">
     <event catalog:eventid="[ID]" catalog:eventsource="[SOURCE]" catalog:datasource="us" publicID="quakeml:us.anss.org/event/[ID]">
       <focalMechanism publicID="quakeml:us.anss.org/focalMechanism/[ID]/[METHOD]">
-        <triggeringOriginID>quakeml:us.anss.org/origin/[TRIGGERID]
-        </triggeringOriginID>
-        <derivedOriginID>quakeml:us.anss.org/origin/[ID]/[METHOD]
-        </derivedOriginID>
+        <triggeringOriginID>quakeml:us.anss.org/origin/[TRIGGERID]</triggeringOriginID>
+        <derivedOriginID>quakeml:us.anss.org/origin/[ID]/[METHOD]</derivedOriginID>
         <nodalPlanes>
           <nodalPlane1>
             <strike>
-              <value>[NP1STRIKE]
-              </value>
+              <value>[NP1STRIKE]</value>
             </strike>
             <dip>
-              <value>[NP1DIP]
-              </value>
+              <value>[NP1DIP]</value>
             </dip>
             <rake>
-              <value>[NP1RAKE]
-              </value>
+              <value>[NP1RAKE]</value>
             </rake>
           </nodalPlane1>
           <nodalPlane2>
             <strike>
-              <value>[NP2STRIKE]
-              </value>
+              <value>[NP2STRIKE]</value>
             </strike>
             <dip>
-              <value>[NP2DIP]
-              </value>
+              <value>[NP2DIP]</value>
             </dip>
             <rake>
-              <value>[NP2RAKE]
-              </value>
+              <value>[NP2RAKE]</value>
             </rake>
           </nodalPlane2>
         </nodalPlanes>
         <creationInfo>
-          <agencyID>us
-          </agencyID>
+          <agencyID>us</agencyID>
         </creationInfo>
       </focalMechanism>
       <magnitude publicID="quakeml:us.anss.org/magnitude/[ID]/[METHOD]">
         <mag>
-          <value>[MAG]
-          </value>
+          <value>[MAG]</value>
         </mag>
         <type>[METHOD]
         </type>
-        <originID>quakeml:us.anss.org/origin/[ID]
-        </originID>
+        <originID>quakeml:us.anss.org/origin/[ID]</originID>
       </magnitude>
       <origin publicID="quakeml:us.anss.org/origin/[TRIGGERID]">
         <time>
-          <value>[TRIGGERTIME]
-          </value>
+          <value>[TRIGGERTIME]</value>
         </time>
         <longitude>
-          <value>[TRIGGERLON]
-          </value>
+          <value>[TRIGGERLON]</value>
         </longitude>
         <latitude>
-          <value>[TRIGGERLAT]
-          </value>
+          <value>[TRIGGERLAT]</value>
         </latitude>
         <depth>
-          <value>[TRIGGERDEPTH]
-          </value>
+          <value>[TRIGGERDEPTH]</value>
         </depth>
       </origin>
       <origin publicID="quakeml:us.anss.org/origin/[ID]/[METHOD]">
         <time>
-          <value>[TIME]
-          </value>
+          <value>[TIME]</value>
         </time>
         <longitude>
-          <value>[LON]
-          </value>
+          <value>[LON]</value>
         </longitude>
         <latitude>
-          <value>[LAT]
-          </value>
+          <value>[LAT]</value>
         </latitude>
         [DEPTH]
         </origin>
@@ -88,9 +70,8 @@
       </type>
     </event>
     <creationInfo>
-      <agencyID>us
-      </agencyID>
-      <author>gchoy
+      <agencyID>us</agencyID>
+      <author>[AUTHOR]
       </author>
       <creationTime>[CTIME]</creationTime>
     </creationInfo>
