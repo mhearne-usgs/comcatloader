@@ -61,7 +61,7 @@ def processEvent(quake,event,origins,events,numevents,ievent):
     ofmt = '\t%i) %s M%.1f (%.4f,%.4f) %.1f km - %.1f km distance, %i seconds'
     oidx = -1
     if norg == 1:
-        quake.renderXML(event,origins[0])
+        filename = quake.renderXML(event,origins[0])
         print 'Writing event %s to file (%i of %i).' % (eventdesc,ievent,numevents)
     if norg == 0:
         if quake.type == quakeml.ORIGIN:
@@ -111,6 +111,8 @@ def processEvent(quake,event,origins,events,numevents,ievent):
                 print 'Not associating event, as requested.'
         else:
             print "You obviously can't read.  Moving on."
+    if (oidx < 0 and norg > 1) or filename is None:
+        x = 1
     return (filename,oidx)
 
 #this should be a generator
@@ -212,6 +214,8 @@ def main(options,args):
     summary = [] #list of events that were not associated, or were associated manually
     for event,origins,events in quake.generateEvents():
         xmlfile,oidx = processEvent(quake,event,origins,events,numevents,numprocessed)
+        if xmlfile is None:
+            x = 1
         if len(origins) != 1:
             summary.append(getSummary(event,origins,oidx))
         xmlfiles.append(xmlfile)
@@ -219,10 +223,14 @@ def main(options,args):
 
     if options.load:
         for xmlfile in xmlfiles:
-            res,output = quake.push(xmlfile)
+            if xmlfile is None:
+                x = 1
+            res,output,errors = quake.push(xmlfile)
+            p,fname = os.path.split(xmlfile)
             if not res:
-                p,fname = os.path.split(xmlfile)
-                print 'Failed to send quakeML file %s. Error: "%s"' % (fname,output)
+                print 'Failed to send quakeML file %s. Output: "%s" Error: "%s"' % (fname,output,errors)
+            else:
+                print 'Sent quakeML file %s, output %s.' % (fname,output)
 
     if not len(summary):
         sys.exit(0)

@@ -94,13 +94,13 @@ def getCommandOutput(cmd):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE
                             )
-    output = proc.communicate()[0]
+    output,errors = proc.communicate()
     retcode = proc.returncode
     if retcode == 0:
         retcode = True
     else:
         retcode = False
-    return (retcode,output)
+    return (retcode,output,errors)
 
 def getEuclidean(lat1,lon1,time1,lat2,lon2,time2,dwindow=100.0,twindow=16.0):
     dd = distance.sdist(lat1,lon1,lat2,lon2)/1000.0
@@ -253,8 +253,8 @@ class QuakeML(object):
         cmd = cmd.replace('[CONFIGFILE]',pdlconfig)
         cmd = cmd.replace('[KEYFILE]',pdlkey)
         cmd = cmd.replace('[QUAKEMLFILE]',quakemlfile)
-        res,output = getCommandOutput(cmd)
-        return (res,output)
+        res,output,errors = getCommandOutput(cmd)
+        return (res,output,errors)
             
     def getRequiredKeys(self):
         if self.type == 'origin':
@@ -324,7 +324,7 @@ class QuakeML(object):
         eqdict['author'] = self.author
         eqdict['triggersource'] = self.triggersource
 
-        if self.type == 'moment' and self.hasAngles(eqdict):
+        if self.type == 'moment' and not self.hasAngles(eqdict):
             eqdict = getMomentTensorAngles(eqdict)
         if not eqdict.has_key('moment'):
             mrr = eqdict['mrr']
