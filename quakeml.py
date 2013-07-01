@@ -30,7 +30,7 @@ from losspager.util import timeutil
 ORIGIN = 'origin'
 TENSOR = 'moment-tensor'
 FOCAL = 'focal-mechanism'
-TIMEFMT = '%Y-%m-%mT%H:%M:%SZ'
+TIMEFMT = '%Y-%m-%dT%H:%M:%SZ'
 DEFAULT_MOMENT_METHOD = 'Mwc'
 DEFAULT_SOURCE = 'us'
 PRODUCT_TYPES = [ORIGIN,TENSOR,FOCAL]
@@ -69,7 +69,6 @@ FORMATS = {'id':'%s',
            'pazimuth':'%i',
            'pplunge':'%i',
            'pvalue':'%.1e',
-           'author':'%s',
            'agency':'%s',
            'version':'%s',
            'method':'%s',
@@ -77,10 +76,22 @@ FORMATS = {'id':'%s',
            'source':'%s',
            'triggersource':'%s',
            'gap':'%.1f',
-           'numchannels':'%i'
+           'numchannels':'%i',
+           'contributor':'%s',
+           'catalog':'%s',
+           'evalmode':'%s',
+           'evalstatus':'%s',
+           'nstations':'%i',
+           'magcomment':'%s',
            }
 
 MACROPATTERN = r'\[([^]]*)\]'
+
+def getEventId(quakemlfile):
+    dom = minidom.parse(quakemlfile)
+    eventid = dom.getElementsByTagName('event')[0].getAttribute('catalog:eventid')
+    dom.unlink()
+    return eventid
 
 def getCommandOutput(cmd):
     """
@@ -189,13 +200,13 @@ class QuakeML(object):
     REQFMFIELDS = ['id','lat','lon','depth','mag','time',
                    'np1strike','np1dip','np1rake',
                    'np1strike','np1dip','np1rake']
-    REQORFIELDS = ['id','lat','lon','depth','mag','time']
+    REQORFIELDS = ['id','lat','lon','depth','magnitude','time']
     SEARCHURL = 'http://ehpd-earthquake.cr.usgs.gov/earthquakes/jffeed/v1.0/nearby.php?'
     #2013-04-01T18:11:53Z
     TIMEFMT = '%Y-%m-%dT%H:%M:%S'
     KM2DEG = 1.0/111.191
     def __init__(self,type,xmlfolder,distwindow=100,timewindow=16,source='us',method=DEFAULT_MOMENT_METHOD,
-                 agency=None,author=None,triggersource=None):
+                 catalog=None,triggersource=None,contributor='us'):
 
         self.DistanceWindow = distwindow
         self.TimeWindow = timewindow
@@ -204,12 +215,14 @@ class QuakeML(object):
         originfile = os.path.join(homedir,'origin_template.xml')
         momentfile = os.path.join(homedir,'moment_template.xml')
         focalfile = os.path.join(homedir,'focal_template.xml')
-        flist = [originfile,momentfile,focalfile]
-        if not os.path.isfile(originfile) or not os.path.isfile(momentfile) or not os.path.isfile(focalfile):
+        magfile = os.path.join(homedir,'magnitude_template.xml')
+        flist = [originfile,momentfile,focalfile,magfile]
+        if not os.path.isfile(originfile) or not os.path.isfile(momentfile) or not os.path.isfile(focalfile) or not os.path.isfile(magfile):
             raise IOError,"Could not find one or more of the following template files: %s" % (','.join(flist))
         if type == ORIGIN:
             self.type = 'origin'
             self.xml = open(originfile,'rt').read()
+            self.magxml = open(magfile,'rt').read()
         elif type == TENSOR:
             self.type = 'moment'
             self.xml = open(momentfile,'rt').read()
@@ -231,10 +244,10 @@ class QuakeML(object):
         self.Lat = []
         self.Lon = []
         self.Time = []
-        self.agency = agency
-        self.author = author
+        self.catalog = catalog
         self.source = source
         self.method = method
+        self.contributor = contributor
         self.triggersource = triggersource
         self.xmlfolder = os.path.join(self.config.get('OUTPUT','folder'),xmlfolder)
         isfolder = os.path.isdir(self.xmlfolder)
@@ -244,8 +257,10 @@ class QuakeML(object):
             except Exception,expobj:
                 raise 'Could not create directory "%s"'
 
-    def push(self,quakemlfile):
+    def push(self,quakemlfile,trumpWeight=None):
         MCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --mainclass=gov.usgs.earthquake.eids.EIDSInputWedge --parser=gov.usgs.earthquake.eids.QuakemlProductCreator --configFile=[PDLFOLDER]/[CONFIGFILE] --privateKey=[PDLFOLDER]/[KEYFILE] --file=[QUAKEMLFILE]'
+        TCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --send --configFile=[PDLFOLDER]/[CONFIGFILE] --privateKey=[PDLFOLDER]/[KEYFILE] --source=us --code=[ID] --property-weight=[WEIGHT] --link-product=urn:usgs-product:[CONTRIBUTOR]:origin:[CATALOG][ID]:[VERSION]'
+
         pdlfolder = self.config.get('PDL','folder')
         pdlkey = self.config.get('PDL','keyfile')
         pdlconfig = self.config.get('PDL','configfile')
@@ -254,6 +269,22 @@ class QuakeML(object):
         cmd = cmd.replace('[KEYFILE]',pdlkey)
         cmd = cmd.replace('[QUAKEMLFILE]',quakemlfile)
         res,output,errors = getCommandOutput(cmd)
+
+        #if the user wants to send a trump message, detect that by trumpWeight not None
+        if trumpWeight is not None:
+            tcmd = TCMD.replace('[PDLFOLDER]',pdlfolder)
+            tcmd = tcmd.replace('[CONFIGFILE]',pdlconfig)
+            tcmd = tcmd.replace('[KEYFILE]',pdlkey)
+            tcmd = tcmd.replace('[CONTRIBUTOR]',self.contributor)
+            tcmd = tcmd.replace('[CATALOG]',self.catalog)
+            eid = getEventId(quakemlfile)#this is sort of a hack, but it's the easiest way to get the ID for the event
+            tcmd = tcmd.replace('[ID]',eid)
+            tcmd = tcmd.replace('[WEIGHT]',trumpWeight)
+            res1,output1,errors1 = getCommandOutput(cmd)
+            if not res1:
+                res = res1
+                output = output1
+                errors = errors1
         return (res,output,errors)
             
     def getRequiredKeys(self):
@@ -319,14 +350,15 @@ class QuakeML(object):
 
         #add in the fields that apply to the whole catalog we are loading
         eqdict['source'] = self.source
-        eqdict['method'] = self.method
-        eqdict['agency'] = self.agency #this may be None
-        eqdict['author'] = self.author
+        if not eqdict.has_key('method'):
+            eqdict['method'] = self.method
+        eqdict['catalog'] = self.catalog #this may be None
         eqdict['triggersource'] = self.triggersource
-
+        eqdict['contributor'] = self.contributor
+        
         if self.type == 'moment' and not self.hasAngles(eqdict):
             eqdict = getMomentTensorAngles(eqdict)
-        if not eqdict.has_key('moment'):
+        if self.type == 'moment' and not eqdict.has_key('moment'):
             mrr = eqdict['mrr']
             mtt = eqdict['mtt']
             mpp = eqdict['mpp']
@@ -335,7 +367,7 @@ class QuakeML(object):
             mtp = eqdict['mtp']
             eqdict['moment'] = calculateTotalMoment(mrr,mtt,mpp,mrt,mrp,mtp)
             mag = calculateMagnitude(eqdict['moment'])
-        if not eqdict.has_key('mag'):
+        if not eqdict.has_key('mag') and self.type != 'origin':
             eqdict['mag'] = calculateMagnitude(eqdict['moment'])
         
         self.EventList.append(eqdict)
@@ -456,6 +488,21 @@ class QuakeML(object):
     def renderXML(self,event,origin=None):
         event['ctime'] = datetime.datetime.utcnow()
         event['version'] = event['ctime'].strftime('%s')
+
+        #treat magnitude field specially - it is possible with origins to have
+        #multiple magnitudes input - we have a separate magnitude template file
+        #that we fill in with each group of magnitude information
+        magtext = ''
+        for magdict in event['magnitude']:
+            tmptext = self.magxml
+            for key in magdict.keys():
+                if key not in FORMATS.keys():
+                    continue
+                macro = '[%s]' % key.upper()
+                value = FORMATS[key] % magdict[key]
+                tmptext = tmptext.replace(macro,value)
+            magtext += tmptext
+        
         if origin is not None:
             event['triggertime'] = origin['time']
             event['triggerlon'] = origin['lon']
@@ -463,6 +510,8 @@ class QuakeML(object):
             event['triggerdepth'] = origin['depth']
             event['triggerid'] = origin['id']
         xmltext = self.xml
+        xmltext = xmltext.replace('[MAGNITUDES]',magtext)
+        
         for key in event.keys():
             if key not in FORMATS.keys():
                 continue
@@ -476,7 +525,31 @@ class QuakeML(object):
                 except:
                     pass
             xmltext = xmltext.replace(macro,value)
+
+
+        #get the preferred magnitude ID from the xml we just made
+        prefmethod = event['magnitude'][0]['method']
+        try:
+            dom = minidom.parseString(xmltext)
+        except:
+            pass
+        mags = dom.getElementsByTagName('magnitude')
+        prefid = None
+        for mag in mags:
+            pid = mag.getAttribute('publicID')
+            if pid.lower().endswith((prefmethod.lower())):
+                prefid = pid
+                break
+        dom.unlink()
+        #now put it into the xml
+        xmltext = xmltext.replace('[PREFMAGID]',prefid)
+        #get rid of any fields that weren't filled in by the catalog module
         xmltext = self.removeUnusedMacros(xmltext)
+
+        #strip out all newline characters
+        xmltext = xmltext.replace('\n','')
+        xmltext = xmltext.replace('\t','')
+        
         filename = os.path.join(self.xmlfolder,'%s.xml' % event['id'])
         f = open(filename,'wt')
         f.write(xmltext)
@@ -506,7 +579,10 @@ class QuakeML(object):
         for trash in trashcan:
             #print 'Removing unfilled element %s' % str(element)
             parent = parent_map[trash]
-            parent.remove(trash)
+            try:
+                parent.remove(trash)
+            except Exception,e:
+                pass
         f = StringIO.StringIO()
         tree.write(f,xml_declaration=False,default_namespace='')
         xmloutput = f.getvalue()

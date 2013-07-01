@@ -1,0 +1,12 @@
+<magnitude publicID="quakeml:[CONTRIBUTOR].anss.org/magnitude/[CATALOG][ID]/[METHOD]">
+	<mag>
+		<value>[MAG]</value>
+  </mag>
+  <type>[METHOD]</type>
+  <evaluationMode>[EVALMODE]</evaluationMode>
+  <evaluationStatus>[EVALSTATUS]</evaluationStatus>
+	<originID>quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]</originID>
+  <comment>
+    [MAGCOMMENT]
+  </comment>
+</magnitude>

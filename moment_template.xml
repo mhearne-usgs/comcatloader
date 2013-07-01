@@ -1,11 +1,11 @@
 <q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:catalog="http://anss.org/xmlns/catalog/0.1" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
-  <eventParameters publicID="quakeml:us.anss.org/eventParameters/[ID]/[VERSION]">
-    <event catalog:eventid="[ID]" catalog:eventsource="[SOURCE]" catalog:datasource="us" publicID="quakeml:us.anss.org/event/[ID]">
-      <focalMechanism publicID="quakeml:us.anss.org/focalMechanism/[ID]/[METHOD]">
-        <momentTensor publicID="quakeml:us.anss.org/momentTensor/[ID]/[METHOD]">
-          <triggeringOriginID>quakeml:us.anss.org/origin/pde[ID]</triggeringOriginID>
-          <derivedOriginID>quakeml:us.anss.org/origin/[ID]/[METHOD]</derivedOriginID>
-          <momentMagnitudeID>quakeml:us.anss.org/magnitude/[ID]/[METHOD]</momentMagnitudeID>
+  <eventParameters publicID="quakeml:[CONTRIBUTOR].anss.org/eventParameters/[ID]/[VERSION]">
+    <event catalog:eventid="[ID]" catalog:eventsource="[CATALOG]" catalog:datasource="[CONTRIBUTOR]" publicID="quakeml:[CONTRIBUTOR].anss.org/event/[ID]">
+      <focalMechanism publicID="quakeml:[CONTRIBUTOR].anss.org/focalMechanism/[ID]/[METHOD]">
+        <momentTensor publicID="quakeml:[CONTRIBUTOR].anss.org/momentTensor/[ID]/[METHOD]">
+          <triggeringOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/pde[ID]</triggeringOriginID>
+          <derivedOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[ID]/[METHOD]</derivedOriginID>
+          <momentMagnitudeID>quakeml:[CONTRIBUTOR].anss.org/magnitude/[ID]/[METHOD]</momentMagnitudeID>
           <scalarMoment>
             <value>[MOMENT]</value>
           </scalarMoment>
@@ -50,8 +50,8 @@
             </componentCount>
           </dataUsed>
         </momentTensor>
-        <triggeringOriginID>quakeml:us.anss.org/origin/[TRIGGERID]</triggeringOriginID>
-        <derivedOriginID>quakeml:us.anss.org/origin/[ID]/[METHOD]</derivedOriginID>
+        <triggeringOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[TRIGGERID]</triggeringOriginID>
+        <derivedOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[ID]/[METHOD]</derivedOriginID>
         <nodalPlanes>
           <nodalPlane1>
             <strike>
@@ -112,10 +112,12 @@
           </nAxis>
         </principalAxes>
         <creationInfo>
-          <agencyID>us</agencyID>
+          <agencyID>[CONTRIBUTOR]</agencyID>
         </creationInfo>
+        <evaluationMode>[EVALMODE]</evaluationMode>
+        <evaluationStatus>[EVALSTATUS]</evaluationStatus>
       </focalMechanism>
-      <magnitude publicID="quakeml:us.anss.org/magnitude/[ID]/[METHOD]">
+      <magnitude publicID="quakeml:[CONTRIBUTOR].anss.org/magnitude/[ID]/[METHOD]">
         <mag>
           <value>[MAG]</value>
         </mag>
@@ -124,9 +126,9 @@
         </azimuthalGap>
         <type>[METHOD]
         </type>
-        <originID>quakeml:us.anss.org/origin/[ID]</originID>
+        <originID>quakeml:[CONTRIBUTOR].anss.org/origin/[ID]</originID>
       </magnitude>
-      <origin publicID="quakeml:us.anss.org/origin/[TRIGGERID]">
+      <origin publicID="quakeml:[CONTRIBUTOR].anss.org/origin/[TRIGGERID]">
         <time>
           <value>[TRIGGERTIME]</value>
         </time>
@@ -140,7 +142,7 @@
           <value>[TRIGGERDEPTH]</value>
         </depth>
       </origin>
-      <origin publicID="quakeml:us.anss.org/origin/[ID]/[METHOD]">
+      <origin publicID="quakeml:[CONTRIBUTOR].anss.org/origin/[ID]/[METHOD]">
         <time>
           <value>[TIME]</value>
         </time>
@@ -159,8 +161,6 @@
     </event>
     <creationInfo>
       <agencyID>[AGENCY]</agencyID>
-      <author>[AUTHOR]
-      </author>
       <creationTime>[CTIME]</creationTime>
     </creationInfo>
   </eventParameters>

@@ -47,6 +47,8 @@ def getEvents(args,startDate=None,endDate=None):
         event['mrt'] = float(parts[15])/1.0e7
         event['mrp'] = float(parts[16])/1.0e7
         event['mtp'] = float(parts[17])/1.0e7
+        event['evalmode'] = 'manual'
+        event['evalstatus'] = 'reviewed'
         yield event
 
 def main(args):

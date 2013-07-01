@@ -118,7 +118,7 @@ if __name__ == '__main__':
         lastmonth = months[-1]
 
     quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',source='gcmt',
-                            method='Mwc',agency='gcmt',author='gcmt',
+                            method='Mwc',agency='gcmt',
                             triggersource='pde')
 
     #download our monthly ndk file and our quick file

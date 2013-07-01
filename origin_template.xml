@@ -1,14 +1,9 @@
 <?xml version="1.0"?>
 <q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:catalog="http://anss.org/xmlns/catalog/0.1" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
-	<eventParameters publicID="quakeml:us.anss.org/eventParameters/[ID]">
-		<event catalog:eventid="[ID]" catalog:eventsource="[SOURCE]" catalog:datasource="[SOURCE]" publicID="quakeml:atlas.anss.org/event/[SOURCE][ID]">
-			<magnitude publicID="quakeml:us.anss.org/magnitude/[SOURCE][ID]">
-				<mag>
-					<value>[MAG]</value>
-				</mag>
-				<originID>quakeml:atlas.anss.org/origin/[SOURCE][ID]</originID>
-			</magnitude>
-			<origin publicID="quakeml:atlas.anss.org/origin/[SOURCE][ID]">
+	<eventParameters publicID="quakeml:[CONTRIBUTOR].anss.org/eventParameters/[ID]">
+		<event catalog:eventid="[ID]" catalog:eventsource="[CATALOG]" catalog:datasource="[CONTRIBUTOR]" publicID="quakeml:atlas.anss.org/event/[CATALOG][ID]">
+			[MAGNITUDES]
+			<origin publicID="quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]">
 				<time>
 					<value>[TIME]</value>
 				</time>
@@ -21,12 +16,18 @@
 				<depth>
 					<value>[DEPTH]</value>
 				</depth>
+        <evaluationMode>[EVALMODE]</evaluationMode>
+        <evaluationStatus>[EVALSTATUS]</evaluationStatus>
+        <quality>
+          <usedStationCount>[NSTATIONS]</usedStationCount>
+          <azimuthalGap>[GAP]</azimuthalGap>
+        </quality>
 			</origin>
-			<preferredOriginID>quakeml:atlas.anss.org/origin/[SOURCE][ID]</preferredOriginID>
-			<preferredMagnitudeID>quakeml:atlas.anss.org/magnitude/[SOURCE][ID]</preferredMagnitudeID>
+			<preferredOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]</preferredOriginID>
+			<preferredMagnitudeID>[PREFMAGID]</preferredMagnitudeID>
 			<type>earthquake</type>
 			<creationInfo>
-				<agencyID>atlas</agencyID>
+				<agencyID>[AGENCY]</agencyID>
 				<creationTime>[CTIME]</creationTime>
 			</creationInfo>
 		</event>

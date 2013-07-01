@@ -57,7 +57,11 @@ def processEvent(quake,event,origins,events,numevents,ievent):
     filename = None
     norg = len(origins)
     nevents = len(events)
-    eventdesc = '%s: %s M%.1f (%.4f,%.4f)' % (event['id'],str(event['time']),event['mag'],event['lat'],event['lon'])
+    if quake.type == quakeml.ORIGIN:
+        mag = event['magnitude'][0]['mag']
+    else:
+        mag = event['mag']
+    eventdesc = '%s: %s M%.1f (%.4f,%.4f)' % (event['id'],str(event['time']),mag,event['lat'],event['lon'])
     ofmt = '\t%i) %s M%.1f (%.4f,%.4f) %.1f km - %.1f km distance, %i seconds'
     oidx = -1
     if norg == 1:
@@ -66,7 +70,7 @@ def processEvent(quake,event,origins,events,numevents,ievent):
     if norg == 0:
         if quake.type == quakeml.ORIGIN:
             filename = quake.renderXML(event)
-            print 'No events associated with %s - rendering origin to XML' % eventdesc
+            print 'Rendering origin %s to XML' % eventdesc
         else:
             print 'No events associated with %s' % eventdesc            
     if norg > 1:
@@ -121,6 +125,12 @@ def getEvents():
     pass
 
 def main(options,args):
+    if options.trumpWeight is not None:
+        try:
+            int(options.trumpWeight)
+        except ValueError:
+            print 'Trump weight must be an integer value.'
+            sys.exit(1)
     modulefile = args[0]
     if not os.path.isfile(modulefile):
         print 'Module file %s does not exist!'
@@ -142,21 +152,18 @@ def main(options,args):
         twindow = int(options.timewindow)
     if options.distance is not None:
         dwindow = float(options.distance)
-    author = 'neic'
-    agency = 'us'
-    source = quakeml.DEFAULT_SOURCE
+    catalog = 'us'
+    contributor = quakeml.DEFAULT_SOURCE
     triggersource = None
     method = None
     ptype = 'origin'
     startdate = DEFAULT_START
     enddate = DEFAULT_END
     folder = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    if options.author is not None:
-        author = options.author
-    if options.agency is not None:
-        agency = options.agency
-    if options.source is not None:
-        source = options.source
+    if options.catalog is not None:
+        catalog = options.catalog
+    if options.contributor is not None:
+        contributor = options.contributor
     if options.method is not None:
         method = options.method
     if options.folder is not None:
@@ -181,8 +188,8 @@ def main(options,args):
         if ptype not in types:
             print '%s not in %s.  Exiting.' % (ptype,','.join(types))
             sys.exit(1)
-    quake = quakeml.QuakeML(ptype,folder,agency=agency,author=author,
-                            triggersource=triggersource,source=source,
+    quake = quakeml.QuakeML(ptype,folder,catalog=catalog,
+                            triggersource=triggersource,contributor=contributor,
                             method=method,timewindow=twindow,distwindow=dwindow)
     if options.clear:
         resp = raw_input('You set the option to clear all existing QuakeML output.  Are you sure? Y/[n]')
@@ -206,6 +213,8 @@ def main(options,args):
         if os.path.isfile(xmlfile):
             xmlfiles.append(xmlfile)
             continue
+        if event['time'] > datetime.datetime(2007,9,30):
+            pass
         quake.add(event)
         numevents += 1
         
@@ -216,7 +225,7 @@ def main(options,args):
         xmlfile,oidx = processEvent(quake,event,origins,events,numevents,numprocessed)
         if xmlfile is None:
             x = 1
-        if len(origins) != 1:
+        if len(origins) != 1 and options.producttype != 'origin':
             summary.append(getSummary(event,origins,oidx))
         xmlfiles.append(xmlfile)
         numprocessed += 1
@@ -225,7 +234,7 @@ def main(options,args):
         for xmlfile in xmlfiles:
             if xmlfile is None:
                 x = 1
-            res,output,errors = quake.push(xmlfile)
+            res,output,errors = quake.push(xmlfile,options.trumpWeight)
             p,fname = os.path.split(xmlfile)
             if not res:
                 print 'Failed to send quakeML file %s. Output: "%s" Error: "%s"' % (fname,output,errors)
@@ -250,12 +259,12 @@ if __name__ == '__main__':
                   help="change to TIME timewindow from 16 sec default", metavar="TIME")
     parser.add_option("-d", "--distance", dest="distance",
                   help="change to DISTANCE search radius from 100 km default", metavar="DISTANCE")
-    parser.add_option("-a", "--author", dest="author",
-                  help="Set the author of this catalog", metavar="AUTHOR")
-    parser.add_option("-g", "--agency", dest="agency",
-                  help="Set the agency of this catalog", metavar="AGENCY")
-    parser.add_option("-s", "--source", dest="source",
-                  help="Set the source for this data", metavar="SOURCE")
+    parser.add_option("-g", "--catalog", dest="catalog",
+                  help="Set the catalog name", metavar="CATALOG")
+    parser.add_option("-o", "--contributor", dest="contributor",
+                  help="Set the contributor for this data", metavar="CONTRIBUTOR")
+    parser.add_option("-u", "--trumpweight", dest="trumpWeight",
+                  help="Set the trump weight for this catalog", metavar="TRUMPWEIGHT")
     parser.add_option("-r", "--triggersource", dest="triggersource",
                   help="Set the trigger source for this data (what catalog should this data associate with)", metavar="TRIGGERSOURCE")
     parser.add_option("-m", "--method", dest="method",
