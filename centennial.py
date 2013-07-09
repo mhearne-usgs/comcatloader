@@ -46,10 +46,6 @@ def getEvents(args,startDate=None,endDate=None):
         #at least one event appears to have undefined values for day,hour,min
         if day == 0:
             day = 1
-        if hour == 0:
-            hour = 1
-        if minute == 0:
-            minute = 1
             
         eqdict['time'] = datetime.datetime(year,month,day,hour,minute,second,millisecond)
         #filter out events outside time window
