@@ -141,7 +141,7 @@ def main(options,args):
     try:
         module = importlib.import_module(modname)
     except ImportError:
-        print '%s does not appear to be a valid Python module.'
+        print '%s does not appear to be a valid Python module.' % modname
         sys.exit(1)
     if not module.__dict__.has_key('getEvents'):
         print '%s does not appear to have the required function getEvents().'

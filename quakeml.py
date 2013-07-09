@@ -23,8 +23,8 @@ import numpy
 import pytz
 
 #local imports
-from losspager.map import distance
-from losspager.util import timeutil
+from pagermap import distance
+from pagerutil import timeutil
 
 #module constants
 ORIGIN = 'origin'
@@ -531,16 +531,17 @@ class QuakeML(object):
         prefmethod = event['magnitude'][0]['method']
         try:
             dom = minidom.parseString(xmltext)
+            mags = dom.getElementsByTagName('magnitude')
+            prefid = None
+            for mag in mags:
+                pid = mag.getAttribute('publicID')
+                if pid.lower().endswith((prefmethod.lower())):
+                    prefid = pid
+                    break
+            dom.unlink()
         except:
-            pass
-        mags = dom.getElementsByTagName('magnitude')
-        prefid = None
-        for mag in mags:
-            pid = mag.getAttribute('publicID')
-            if pid.lower().endswith((prefmethod.lower())):
-                prefid = pid
-                break
-        dom.unlink()
+            open('debug.xml','wt').write(xmltext)
+            sys.exit(1)
         #now put it into the xml
         xmltext = xmltext.replace('[PREFMAGID]',prefid)
         #get rid of any fields that weren't filled in by the catalog module

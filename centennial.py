@@ -6,15 +6,14 @@ import math
 #1900-07-29 06:59:00.00
 TIMEFMT = '%Y-%m-%d %H:%M:%S.%f'
 
-AZGAP_EARLY = {'':'Unknown azimuthal gap',
+AZGAP = {'':'Unknown azimuthal gap',
                'A':'Azimuthal gap less than 180 degrees',
                'B':'Azimuthal gap between 180 and 210 degrees',
                'C':'Azimuthal gap between 210 and 240 degrees',
                'D':'Azimuthal gap between 240 and 270 degrees',
-               'F':'Azimuthal gap greater than 270 degrees'}
-
-AZGAP_LATE = {'':'Azimuthal gap < 180 degrees',
-              'Z':'Azimuthal gap >= 180 degrees'}
+               'F':'Azimuthal gap greater than 270 degrees',
+               '':'Azimuthal gap less than 180 degrees',
+               'Z':'Azimuthal gap greater than or equal to 180 degrees'}
 
 #format
 #ABE        1905  4 19  12 25  0.00  -32.000-171.000   0.0 179   0 6.8 Ms AN2   0.0          0.0          0.0          0.0          0.0          0.0          0.0
@@ -51,26 +50,26 @@ def getEvents(args,startDate=None,endDate=None):
             hour = 1
         if minute == 0:
             minute = 1
-        try:
-            eqdict['time'] = datetime.datetime(year,month,day,hour,minute,second,millisecond)
-        except:
-            pass
-        if eqdict['asol'] in AZGAP_EARLY.keys() or eqdict['asol'] in AZGAP_LATE.keys():
-            if eqdict['time'].year <= 1963:
-                eqdict['magcomment'] = AZGAP_EARLY[eqdict['asol']]
-            else:
-                eqdict['magcomment'] = AZGAP_LATE[eqdict['asol']]
+            
+        eqdict['time'] = datetime.datetime(year,month,day,hour,minute,second,millisecond)
+        #filter out events outside time window
+        if eqdict['time'] < startDate or eqdict['time'] > endDate:
+            continue
+        
+        if eqdict['asol'] in AZGAP.keys():
+            eqdict['magcomment'] = AZGAP[eqdict['asol']]
         else:
             eqdict['magcomment'] = 'Unknown azimuthal gap'
         eqdict['id'] = eqdict['time'].strftime('%Y%m%d%H%M%S')
-        if eqdict['time'] > datetime.datetime(2007,9,30,9,46,0):
-            pass
+
+        
+        
         #fortran 2f8.3
         eqdict['lat'] = float(line[35:43].strip())
         eqdict['lon'] = float(line[43:51].strip())
 
         #f6.1
-        eqdict['depth'] = float(line[51:57].strip())
+        eqdict['depth'] = float(line[51:57].strip())*1000
 
         #2i4
         eqdict['fereg'] = int(line[57:61].strip())
