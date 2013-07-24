@@ -226,9 +226,11 @@ class QuakeML(object):
         elif type == TENSOR:
             self.type = 'moment'
             self.xml = open(momentfile,'rt').read()
+            self.magxml = open(magfile,'rt').read()
         elif type == FOCAL:
             self.type = 'focal'
             self.xml = open(focalfile,'rt').read()
+            self.magxml = open(magfile,'rt').read()
         else:
             raise IOError,"Unsupported product type '%s'" % type
 
@@ -367,8 +369,8 @@ class QuakeML(object):
             mtp = eqdict['mtp']
             eqdict['moment'] = calculateTotalMoment(mrr,mtt,mpp,mrt,mrp,mtp)
             mag = calculateMagnitude(eqdict['moment'])
-        if not eqdict.has_key('mag') and self.type != 'origin':
-            eqdict['mag'] = calculateMagnitude(eqdict['moment'])
+        if not eqdict.has_key('magnitude') and self.type != 'origin':
+            eqdict['magnitude'] = calculateMagnitude(eqdict['moment'])
         
         self.EventList.append(eqdict)
         self.updateCloseEvents()
@@ -412,12 +414,17 @@ class QuakeML(object):
         APITIMEFMT = '%Y-%m-%dT%H:%M:%S.%f'
         mintime = etime - datetime.timedelta(seconds=self.TimeWindow)
         maxtime = etime + datetime.timedelta(seconds=self.TimeWindow)
-        tminsecs = int(timeutil.toTimeStamp(mintime)*1000)
-        tmaxsecs = int(timeutil.toTimeStamp(maxtime)*1000)
         minlat = lat - self.DistanceWindow * self.KM2DEG
         maxlat = lat + self.DistanceWindow * self.KM2DEG
         minlon = lon - self.DistanceWindow * self.KM2DEG * (1/distance.cosd(lat))
         maxlon = lon + self.DistanceWindow * self.KM2DEG * (1/distance.cosd(lat))
+
+        #handle meridian crossing problem
+        # if minlon < 180 and maxlon > 180:
+        #     maxlon = 360-maxlon
+        # if minlon < -180 and maxlon > -180:
+        #     minlon = 360 + minlon
+        
         etimestr = etime.strftime(self.TIMEFMT)+'Z'
         searchurl = 'http://comcat.cr.usgs.gov/fdsnws/event/1/query?%s'
         #searchurl = 'http://comcat.cr.usgs.gov/earthquakes/feed/search.php?%s'
@@ -425,8 +432,12 @@ class QuakeML(object):
                  'maxlatitude':maxlat,'maxlongitude':maxlon,
                  'starttime':mintime.strftime(APITIMEFMT),'endtime':maxtime.strftime(APITIMEFMT),
                  'catalog':self.triggersource,'format':'geojson','eventtype':'earthquake'}
+        if self.triggersource == "":
+            pdict.pop('catalog')
         params = urllib.urlencode(pdict)
         searchurl = searchurl % params
+        if etime.year >= 2006:
+            pass
         origins = []
         try:
             fh = urllib2.urlopen(searchurl)
@@ -509,6 +520,7 @@ class QuakeML(object):
             event['triggerlat'] = origin['lat']
             event['triggerdepth'] = origin['depth']
             event['triggerid'] = origin['id']
+                
         xmltext = self.xml
         xmltext = xmltext.replace('[MAGNITUDES]',magtext)
         

@@ -71,8 +71,17 @@ class NDKReader(MTReader):
         record['triggerlat'] = tdict['eventLatitude']
         record['triggerlon'] = tdict['eventLongitude']
         record['triggerdepth'] = tdict['eventDepth']
+        record['triggerid'] = tdict['eventSource']+tdict['eventTime'].strftime('%Y%m%d%H%M%S')
+
+        #magnitude is now a list of dictionaries
+        #each element of list should have keys: mag,method,evalstatus,evalmode
+        if tdict['timestamp'].find('Q') > -1:
+            evalstatus = 'preliminary'
+        else:
+            evalstatus = 'reviewed'
+        mag1 = {'mag':tdict['momentMagnitude'],'method':'Mwc','evalstatus':evalstatus,'evalmode':'manual'}
+        record['magnitude'] = [mag1]
         
-        record['mag'] = tdict['momentMagnitude']
         record['tazimuth'] = tdict['eigenVectorAzimuths'][0]
         record['tplunge'] = tdict['eigenVectorPlunges'][0]
         record['tvalue'] = tdict['eigenVectorValues'][0]
@@ -179,18 +188,18 @@ class NDKReader(MTReader):
 
     def parseLine4(self,line,tdict):
         tdict['exponent'] = float(line[0:2])
-        tdict['tensorMrr'] = float(line[2:9])*math.pow(10.0,tdict['exponent'])
-        tdict['tensorMrrError'] = float(line[9:15])*math.pow(10.0,tdict['exponent'])
-        tdict['tensorMtt'] = float(line[15:22])*math.pow(10.0,tdict['exponent'])
-        tdict['tensorMttError'] = float(line[22:28])*math.pow(10.0,tdict['exponent'])
-        tdict['tensorMpp'] = float(line[28:35])*math.pow(10.0,tdict['exponent'])
-        tdict['tensorMppError'] = float(line[35:41])*math.pow(10.0,tdict['exponent'])
-        tdict['tensorMrt'] = float(line[41:48])*math.pow(10.0,tdict['exponent'])
-        tdict['tensorMrtError'] = float(line[48:54])*math.pow(10.0,tdict['exponent'])
-        tdict['tensorMrp'] = float(line[54:61])*math.pow(10.0,tdict['exponent'])
-        tdict['tensorMrpError'] = float(line[61:67])*math.pow(10.0,tdict['exponent'])
-        tdict['tensorMtp'] = float(line[67:74])*math.pow(10.0,tdict['exponent'])
-        tdict['tensorMtpError'] = float(line[74:])*math.pow(10.0,tdict['exponent'])
+        tdict['tensorMrr'] = float(line[2:9])*math.pow(10.0,tdict['exponent'])/1e7
+        tdict['tensorMrrError'] = float(line[9:15])*math.pow(10.0,tdict['exponent'])/1e7
+        tdict['tensorMtt'] = float(line[15:22])*math.pow(10.0,tdict['exponent'])/1e7
+        tdict['tensorMttError'] = float(line[22:28])*math.pow(10.0,tdict['exponent'])/1e7
+        tdict['tensorMpp'] = float(line[28:35])*math.pow(10.0,tdict['exponent'])/1e7
+        tdict['tensorMppError'] = float(line[35:41])*math.pow(10.0,tdict['exponent'])/1e7
+        tdict['tensorMrt'] = float(line[41:48])*math.pow(10.0,tdict['exponent'])/1e7
+        tdict['tensorMrtError'] = float(line[48:54])*math.pow(10.0,tdict['exponent'])/1e7
+        tdict['tensorMrp'] = float(line[54:61])*math.pow(10.0,tdict['exponent'])/1e7
+        tdict['tensorMrpError'] = float(line[61:67])*math.pow(10.0,tdict['exponent'])/1e7
+        tdict['tensorMtp'] = float(line[67:74])*math.pow(10.0,tdict['exponent'])/1e7
+        tdict['tensorMtpError'] = float(line[74:])*math.pow(10.0,tdict['exponent'])/1e7
 
     def parseLine5(self,line,tdict):
         tdict['programVersion'] = line[0:3].strip()
@@ -241,4 +250,4 @@ def getEvents(args,startDate=None,endDate=None):
 if __name__ == '__main__':
     ndkfile = sys.argv[1]
     for record in getEvents([ndkfile]):
-        print record['time'],record['mag']
+        print record['time'],record['magnitude'][0]

@@ -11,6 +11,7 @@ import StringIO
 import tempfile
 import datetime
 import sys
+import argparse
 
 #local imports
 import quakeml
@@ -18,7 +19,8 @@ import ndk
 
 QUICKURL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_QUICK/qcmt.ndk'
 MONTHLYURL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_MONTHLY/'
-COMCATBASE = 'http://comcat.cr.usgs.gov/earthquakes/feed/search.php?%s'
+COMCATBASE = 'http://comcat.cr.usgs.gov/earthquakes/eventpage/[EVENTID]'
+DEVCOMCATBASE = 'http://dev-earthquake.cr.usgs.gov/earthquakes/eventpage/[EVENTID]'
 
 def getQuickNDK():
     ndkfilename = None
@@ -91,22 +93,25 @@ def getRecentMonth(lastmonth):
         pass
     return (ndkfilename,newrecentmonth,newstart)
 
-def eventInComCat(event):
-    gcmtid = event['id']
-    pdict = {'callback':'comsearch','id':gcmtid}
-    inComCat = False
-    params = urllib.urlencode(pdict)
-    searchurl = COMCATBASE % params
-    fh = urllib2.urlopen(searchurl)
-    data = fh.read()
-    data2 = data[len(pdict['callback'])+1:-2]
-    datadict = json.loads(data2)
-    if not datadict.has_key('message'):
-        inComCat = True
-    fh.close()
+def eventInComCat(event,isdev=False):
+    gcmtid = 'gcmt'+event['id']
+    if isdev:
+        url = COMCATBASE.replace('[EVENTID]',gcmtid)
+    else:
+        url = DEVCOMCATBASE.replace('[EVENTID]',gcmtid)
+    inComCat = True
+    try:
+        fh = urllib2.urlopen(url)
+        fh.close()
+    except:
+        inComCat = False
     return inComCat
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d','--dev', dest='useDev',action='store_true',
+                        help='Use development comcat server')
+    args = parser.parse_args()
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
     #months should be stored as mmmyy (i.e., dec12)
     lastmonthfile = os.path.join(homedir,'lastmonth.txt')
@@ -117,8 +122,8 @@ if __name__ == '__main__':
         months = open(lastmonthfile,'rt').readlines()
         lastmonth = months[-1]
 
-    quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',source='gcmt',
-                            method='Mwc',agency='gcmt',
+    quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',method='Mwc',
+                            contributor='us',catalog='gcmt',
                             triggersource='pde')
 
     #download our monthly ndk file and our quick file
@@ -128,7 +133,7 @@ if __name__ == '__main__':
     if qndkfile is None: #couldn't get the quick CMT files
         sys.exit(1)
     for event in ndk.getEvents([qndkfile],startDate=newstart):
-        if eventInComCat(event):
+        if eventInComCat(event,isdev=args.useDev):
             continue
         print 'Adding event %s' % event['id']
         quake.add(event)
@@ -138,8 +143,8 @@ if __name__ == '__main__':
         quakemlfile = quake.renderXML(event)
         print 'Rendering quick event %s' % event['id']
         #debugging remove this before deployment
-        if event['time'] < datetime.datetime.now() - datetime.timedelta(days=30):
-            continue
+        # if event['time'] < datetime.datetime.now() - datetime.timedelta(days=30):
+        #     continue
         quake.push(quakemlfile)
 
     #clean up after ourselves
@@ -166,7 +171,7 @@ if __name__ == '__main__':
         print 'Rendering reviewed event %s' % event['id']
         quake.push(quakemlfile)
     #clean up after ourselves
-    quake.clearOutput()
+    #quake.clearOutput()
     os.remove(mndkfile)
     sys.exit(0)
     

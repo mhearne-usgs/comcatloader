@@ -2,10 +2,10 @@
   <eventParameters publicID="quakeml:[CONTRIBUTOR].anss.org/eventParameters/[ID]/[VERSION]">
     <event catalog:eventid="[ID]" catalog:eventsource="[CATALOG]" catalog:datasource="[CONTRIBUTOR]" publicID="quakeml:[CONTRIBUTOR].anss.org/event/[ID]">
       <focalMechanism publicID="quakeml:[CONTRIBUTOR].anss.org/focalMechanism/[ID]/[METHOD]">
+        <triggeringOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[TRIGGERID]</triggeringOriginID>
         <momentTensor publicID="quakeml:[CONTRIBUTOR].anss.org/momentTensor/[ID]/[METHOD]">
-          <triggeringOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/pde[ID]</triggeringOriginID>
           <derivedOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[ID]/[METHOD]</derivedOriginID>
-          <momentMagnitudeID>quakeml:[CONTRIBUTOR].anss.org/magnitude/[ID]/[METHOD]</momentMagnitudeID>
+          <momentMagnitudeID>quakeml:[CONTRIBUTOR].anss.org/magnitude/[CATALOG][ID]/[METHOD]</momentMagnitudeID>
           <scalarMoment>
             <value>[MOMENT]</value>
           </scalarMoment>
@@ -29,7 +29,6 @@
               <value>[MTP]</value>
             </Mtp>
           </tensor>
-          <methodID>[METHOD]</methodID>
           <sourceTimeFunction>
             <sourceTimeFunctionType>
               [SOURCETIMETYPE]
@@ -50,8 +49,6 @@
             </componentCount>
           </dataUsed>
         </momentTensor>
-        <triggeringOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[TRIGGERID]</triggeringOriginID>
-        <derivedOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[ID]/[METHOD]</derivedOriginID>
         <nodalPlanes>
           <nodalPlane1>
             <strike>
@@ -117,17 +114,7 @@
         <evaluationMode>[EVALMODE]</evaluationMode>
         <evaluationStatus>[EVALSTATUS]</evaluationStatus>
       </focalMechanism>
-      <magnitude publicID="quakeml:[CONTRIBUTOR].anss.org/magnitude/[ID]/[METHOD]">
-        <mag>
-          <value>[MAG]</value>
-        </mag>
-        <azimuthalGap>
-          [GAP]
-        </azimuthalGap>
-        <type>[METHOD]
-        </type>
-        <originID>quakeml:[CONTRIBUTOR].anss.org/origin/[ID]</originID>
-      </magnitude>
+      [MAGNITUDES]
       <origin publicID="quakeml:[CONTRIBUTOR].anss.org/origin/[TRIGGERID]">
         <time>
           <value>[TRIGGERTIME]</value>
