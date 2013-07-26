@@ -1,6 +1,10 @@
 <q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:catalog="http://anss.org/xmlns/catalog/0.1" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
   <eventParameters publicID="quakeml:[CONTRIBUTOR].anss.org/eventParameters/[ID]/[VERSION]">
-    <event catalog:eventid="[ID]" catalog:eventsource="[CATALOG]" catalog:datasource="[CONTRIBUTOR]" publicID="quakeml:[CONTRIBUTOR].anss.org/event/[ID]">
+    <event catalog:eventid="[ID]" catalog:eventsource="[CATALOG]"
+           catalog:datasource="[CONTRIBUTOR]"
+           publicID="quakeml:[CONTRIBUTOR].anss.org/event/[ID]">
+      <preferredOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]</preferredOriginID>
+      <preferredMagnitudeID>[PREFMAGID]</preferredMagnitudeID>
       <focalMechanism publicID="quakeml:[CONTRIBUTOR].anss.org/focalMechanism/[ID]/[METHOD]">
         <triggeringOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[TRIGGERID]</triggeringOriginID>
         <momentTensor publicID="quakeml:[CONTRIBUTOR].anss.org/momentTensor/[ID]/[METHOD]">
@@ -129,7 +133,7 @@
           <value>[TRIGGERDEPTH]</value>
         </depth>
       </origin>
-      <origin publicID="quakeml:[CONTRIBUTOR].anss.org/origin/[ID]/[METHOD]">
+      <origin publicID="quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]">
         <time>
           <value>[TIME]</value>
         </time>

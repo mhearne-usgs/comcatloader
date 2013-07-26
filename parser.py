@@ -57,10 +57,7 @@ def processEvent(quake,event,origins,events,numevents,ievent):
     filename = None
     norg = len(origins)
     nevents = len(events)
-    if quake.type == quakeml.ORIGIN:
-        mag = event['magnitude'][0]['mag']
-    else:
-        mag = event['mag']
+    mag = event['magnitude'][0]['mag']
     eventdesc = '%s: %s M%.1f (%.4f,%.4f)' % (event['id'],str(event['time']),mag,event['lat'],event['lon'])
     ofmt = '\t%i) %s M%.1f (%.4f,%.4f) %.1f km - %.1f km distance, %i seconds'
     oidx = -1
@@ -233,7 +230,7 @@ def main(options,args):
     if options.load:
         for xmlfile in xmlfiles:
             if xmlfile is None:
-                x = 1
+                continue
             res,output,errors = quake.push(xmlfile,options.trumpWeight)
             p,fname = os.path.split(xmlfile)
             if not res:

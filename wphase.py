@@ -33,6 +33,7 @@ def getEvents(args,startDate=None,endDate=None):
             if event['time'] > endDate:
                 continue
         #parts[3] is the GCMT magnitude - we don't care about that here
+        event['magnitude'] = [{'mag':float(parts[4]),'method':'Mww','evalstatus':'final','evalmode':'manual'}]
         event['mag'] = float(parts[4])
         event['numchannels'] = int(parts[5])
         event['gap'] = float(parts[6])
