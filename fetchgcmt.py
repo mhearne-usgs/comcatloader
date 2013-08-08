@@ -87,7 +87,7 @@ def getRecentMonth(lastmonth):
             ndkfile = open(ndkfilename,'wt')
             ndkfile.write(data)
             ndkfile.close()
-            newrecentmonth = eventmonths[-1][1]
+            newrecentmonth = eventmonths[-1][1].replace('.ndk','')
             newstart = addMonth(eventmonths[-1][0])
     except Exception,message:
         pass
