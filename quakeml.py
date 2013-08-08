@@ -83,6 +83,10 @@ FORMATS = {'id':'%s',
            'evalstatus':'%s',
            'nstations':'%i',
            'magcomment':'%s',
+           'sourcetimetype':'%s',
+           'duration':'%.1f',
+           'risetime':'%.1f',
+           'decaytime':'%.1f',
            }
 
 MACROPATTERN = r'\[([^]]*)\]'
@@ -206,7 +210,7 @@ class QuakeML(object):
     TIMEFMT = '%Y-%m-%dT%H:%M:%S'
     KM2DEG = 1.0/111.191
     def __init__(self,type,xmlfolder,distwindow=100,timewindow=16,source='us',method=DEFAULT_MOMENT_METHOD,
-                 catalog=None,triggersource=None,contributor='us'):
+                 catalog=None,triggersource=None,contributor='us',agency=''):
 
         self.DistanceWindow = distwindow
         self.TimeWindow = timewindow
@@ -250,6 +254,7 @@ class QuakeML(object):
         self.source = source
         self.method = method
         self.contributor = contributor
+        self.agency = agency
         self.triggersource = triggersource
         self.xmlfolder = os.path.join(self.config.get('OUTPUT','folder'),xmlfolder)
         isfolder = os.path.isdir(self.xmlfolder)
@@ -357,6 +362,7 @@ class QuakeML(object):
         eqdict['catalog'] = self.catalog #this may be None
         eqdict['triggersource'] = self.triggersource
         eqdict['contributor'] = self.contributor
+        eqdict['agency'] = self.agency
         
         if self.type == 'moment' and not self.hasAngles(eqdict):
             eqdict = getMomentTensorAngles(eqdict)
@@ -462,8 +468,8 @@ class QuakeML(object):
             fh.close()
             origins = sorted(origins,key=lambda origin: origin['euclidean'])
             return origins
-        except Exception,exception_object:
-            raise exception_object,'Could not reach "%s"' % searchurl
+        except Exception,msg:
+            raise Exception,'Could not reach "%s" - error "%s"' % (searchurl,msg.message)
         
     def associate(self,event):
         lat = event['lat']
@@ -518,7 +524,7 @@ class QuakeML(object):
             event['triggertime'] = origin['time']
             event['triggerlon'] = origin['lon']
             event['triggerlat'] = origin['lat']
-            event['triggerdepth'] = origin['depth']
+            event['triggerdepth'] = origin['depth']*1000
             event['triggerid'] = origin['id']
                 
         xmltext = self.xml
@@ -587,8 +593,10 @@ class QuakeML(object):
                 if len(matchlist):
                     trashcan.append(element)
             tagdata = element.text
+            if tagdata is None:
+                continue
             if re.search(MACROPATTERN,tagdata) is not None:
-                trashcan.append(element)
+                    trashcan.append(element)
         for trash in trashcan:
             #print 'Removing unfilled element %s' % str(element)
             parent = parent_map[trash]

@@ -3,12 +3,11 @@
     <event catalog:eventid="[ID]" catalog:eventsource="[CATALOG]"
            catalog:datasource="[CONTRIBUTOR]"
            publicID="quakeml:[CONTRIBUTOR].anss.org/event/[ID]">
-      <preferredOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]</preferredOriginID>
       <preferredMagnitudeID>[PREFMAGID]</preferredMagnitudeID>
       <focalMechanism publicID="quakeml:[CONTRIBUTOR].anss.org/focalMechanism/[ID]/[METHOD]">
         <triggeringOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[TRIGGERID]</triggeringOriginID>
         <momentTensor publicID="quakeml:[CONTRIBUTOR].anss.org/momentTensor/[ID]/[METHOD]">
-          <derivedOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[ID]/[METHOD]</derivedOriginID>
+          <derivedOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]</derivedOriginID>
           <momentMagnitudeID>quakeml:[CONTRIBUTOR].anss.org/magnitude/[CATALOG][ID]/[METHOD]</momentMagnitudeID>
           <scalarMoment>
             <value>[MOMENT]</value>
@@ -34,18 +33,10 @@
             </Mtp>
           </tensor>
           <sourceTimeFunction>
-            <sourceTimeFunctionType>
-              [SOURCETIMETYPE]
-            </sourceTimeFunctionType>
-            <duration>
-              [DURATION]
-            </duration>
-            <riseTime>
-              [RISETIME]
-            </riseTime>
-            <decayTime>
-              [DECAYTIME]
-            </decayTime>
+            <sourceTimeFunctionType>[SOURCETIMETYPE]</sourceTimeFunctionType>
+            <duration>[DURATION]</duration>
+            <riseTime>[RISETIME]</riseTime>
+            <decayTime>[DECAYTIME]</decayTime>
           </sourceTimeFunction>
           <dataUsed>
             <componentCount>

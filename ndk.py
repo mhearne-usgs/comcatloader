@@ -106,6 +106,14 @@ class NDKReader(MTReader):
         record['mtp'] = tdict['tensorMtp']
         record['mrp'] = tdict['tensorMrp']
         record['mrt'] = tdict['tensorMrt']
+
+        #get the source time stuff
+        if tdict['momentRateFunction'].strip() == 'TRIHD':
+            record['sourcetimetype'] = 'TRIANGLE'
+        else:
+            record['sourcetimetype'] = 'BOX_CAR'
+        record['duration'] = 2*tdict['momentRateFunctionDuration']
+        
         #record['creationtime'] = datetime.datetime.strptime(tdict['timestamp'][2:],'%Y%m%d%H%M%S')
         return record
 
@@ -130,7 +138,7 @@ class NDKReader(MTReader):
             pass
         tdict['eventLatitude'] = float(line[27:33])
         tdict['eventLongitude'] = float(line[34:41])
-        tdict['eventDepth'] = float(line[42:47])
+        tdict['eventDepth'] = float(line[42:47])*1000
         parts = line[48:55].split()
         mag1 = float(line[47:51])
         mag2 = float(line[51:55])
@@ -181,7 +189,7 @@ class NDKReader(MTReader):
         tdict['derivedEventLatitudeError'] = float(line[29:34])
         tdict['derivedEventLongitude'] = float(line[34:42])
         tdict['derivedEventLongitudeError'] = float(line[42:47])
-        tdict['derivedEventDepth'] = float(line[47:53])
+        tdict['derivedEventDepth'] = float(line[47:53])*1000
         tdict['derivedEventDepthError'] = float(line[53:58])
         tdict['derivedDepthType'] = line[58:61].strip()
         tdict['timestamp'] = line[64:80]

@@ -150,6 +150,9 @@ def main(options,args):
     if options.distance is not None:
         dwindow = float(options.distance)
     catalog = 'us'
+    agency = ''
+    if options.agency is not None:
+        agency = options.agency
     contributor = quakeml.DEFAULT_SOURCE
     triggersource = None
     method = None
@@ -185,7 +188,7 @@ def main(options,args):
         if ptype not in types:
             print '%s not in %s.  Exiting.' % (ptype,','.join(types))
             sys.exit(1)
-    quake = quakeml.QuakeML(ptype,folder,catalog=catalog,
+    quake = quakeml.QuakeML(ptype,folder,catalog=catalog,agency=agency,
                             triggersource=triggersource,contributor=contributor,
                             method=method,timewindow=twindow,distwindow=dwindow)
     if options.clear:
@@ -252,6 +255,8 @@ if __name__ == '__main__':
     types = [quakeml.ORIGIN,quakeml.FOCAL,quakeml.TENSOR]
     usage = '''usage: %prog [options] modulefile arg2 ... argN'''
     parser = optparse.OptionParser(usage=usage)
+    parser.add_option("-a", "--agency", dest="agency",
+                  help="Set the agency ID", metavar="AGENCY")
     parser.add_option("-t", "--timewindow", dest="timewindow",
                   help="change to TIME timewindow from 16 sec default", metavar="TIME")
     parser.add_option("-d", "--distance", dest="distance",

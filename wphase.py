@@ -41,7 +41,7 @@ def getEvents(args,startDate=None,endDate=None):
         event['duration'] = float(parts[8]) * 2
         event['lat'] = float(parts[9])
         event['lon'] = float(parts[10])
-        event['depth'] = float(parts[11])
+        event['depth'] = float(parts[11])*1000
         event['mrr'] = float(parts[12])/1.0e7 #convert these values from dyne-cm units to N-m
         event['mtt'] = float(parts[13])/1.0e7
         event['mpp'] = float(parts[14])/1.0e7
