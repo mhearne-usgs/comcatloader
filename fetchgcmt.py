@@ -111,6 +111,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d','--dev', dest='useDev',action='store_true',
                         help='Use development comcat server')
+    parser.add_argument('-n','--no-clean', dest='noClean',action='store_true',
+                        help='Do not clean up local quakeml files (debugging only!)')
     args = parser.parse_args()
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
     #months should be stored as mmmyy (i.e., dec12)
@@ -171,7 +173,8 @@ if __name__ == '__main__':
         print 'Rendering reviewed event %s' % event['id']
         quake.push(quakemlfile)
     #clean up after ourselves
-    #quake.clearOutput()
+    if not args.noClean:
+        quake.clearOutput()
     os.remove(mndkfile)
     sys.exit(0)
     
