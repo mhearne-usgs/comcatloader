@@ -158,7 +158,8 @@ if __name__ == '__main__':
     if newlastmonth not in months:
         months.append(newlastmonth)
         f = open(lastmonthfile,'wt')
-        f.writelines(months)
+        for month in months:
+            f.write(month+'\n')
         f.close()
         
     if mndkfile is None:
