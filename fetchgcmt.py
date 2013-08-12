@@ -124,7 +124,8 @@ if __name__ == '__main__':
         months = [lastmonth]
     else:
         months = open(lastmonthfile,'rt').readlines()
-        lastmonth = months[-1].strip()
+        months = [m.strip() for m in months]
+        lastmonth = months[-1]
 
     quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',method='Mwc',
                             contributor='us',catalog='gcmt',
