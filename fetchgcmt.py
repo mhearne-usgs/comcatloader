@@ -147,7 +147,7 @@ if __name__ == '__main__':
         #debugging remove this before deployment
         # if event['time'] < datetime.datetime.now() - datetime.timedelta(days=30):
         #     continue
-        quake.push(quakemlfile)
+        res,output,errors = quake.push(quakemlfile)
 
     #clean up after ourselves
     os.remove(qndkfile)
