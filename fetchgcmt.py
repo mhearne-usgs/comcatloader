@@ -77,7 +77,7 @@ def getRecentMonth(lastmonth):
             eventmonths.append((eventmonth,match))
 
         eventmonths = sorted(eventmonths,key=lambda e: e[0])
-        if eventmonths[-1][0] > recentmonth:
+        if eventmonths[-1][0] >= recentmonth:
             f,ndkfilename = tempfile.mkstemp(suffix='.ndk')
             os.close(f)
             ndkurl = urlparse.urljoin(endyearurl,eventmonths[-1][1])
