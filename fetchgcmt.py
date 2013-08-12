@@ -95,7 +95,7 @@ def getRecentMonth(lastmonth):
 
 def eventInComCat(event,isdev=False):
     gcmtid = 'gcmt'+event['id']
-    if isdev:
+    if not isdev:
         url = COMCATBASE.replace('[EVENTID]',gcmtid)
     else:
         url = DEVCOMCATBASE.replace('[EVENTID]',gcmtid)
