@@ -167,7 +167,7 @@ if __name__ == '__main__':
     if mndkfile is None:
         quake.clearOutput()
         sys.exit(0)
-    for event in ndk.getEvents([mndkfile]):
+    for event in ndk.getEvents([mndkfile],startDate=newstart):
         quake.add(event)
 
     for event,origins,events in quake.generateEvents():
