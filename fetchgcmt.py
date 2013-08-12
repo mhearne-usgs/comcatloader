@@ -43,6 +43,8 @@ def addMonth(dinput):
     if dinput.month == 12:
         month = 1
         year += 1
+    else:
+        month += 1
     doutput = datetime.datetime(year,month,1)
     return doutput
         
@@ -122,7 +124,7 @@ if __name__ == '__main__':
         months = [lastmonth]
     else:
         months = open(lastmonthfile,'rt').readlines()
-        lastmonth = months[-1]
+        lastmonth = months[-1].strip()
 
     quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',method='Mwc',
                             contributor='us',catalog='gcmt',
