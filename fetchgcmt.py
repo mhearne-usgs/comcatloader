@@ -12,6 +12,7 @@ import tempfile
 import datetime
 import sys
 import argparse
+import calendar
 
 #local imports
 import quakeml
@@ -21,6 +22,7 @@ QUICKURL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_QUICK/qc
 MONTHLYURL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_MONTHLY/'
 COMCATBASE = 'http://comcat.cr.usgs.gov/earthquakes/eventpage/[EVENTID]'
 DEVCOMCATBASE = 'http://dev-earthquake.cr.usgs.gov/earthquakes/eventpage/[EVENTID]'
+TIMEFMT = '%Y-%m-%d %H:%M:%S.%f'
 
 def getQuickNDK():
     ndkfilename = None
@@ -49,14 +51,10 @@ def addMonth(dinput):
     return doutput
         
     
-def getRecentMonth(lastmonth):
+def getRecentMonths(lastreviewed):
     months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
-    year = int(lastmonth[3:5]) + 2000
-    month = months.index(lastmonth[0:3]) + 1
-    recentmonth = datetime.datetime(year,month,1)
-    ndkfilename = None
-    newrecentmonth = lastmonth
-    newstart = None
+    endofmonth = datetime.datetime(1990,1,1)
+    ndkfiles = []
     try:
         fh = urllib2.urlopen(MONTHLYURL)
         data = fh.read()
@@ -75,25 +73,29 @@ def getRecentMonth(lastmonth):
         for match in matches:
             eyear = int(match[3:5]) + 2000
             emonth = months.index(match[0:3]) + 1
-            eventmonth = datetime.datetime(eyear,emonth,1)
-            eventmonths.append((eventmonth,match))
+            monthstart = datetime.datetime(eyear,emonth,1)
+            wkday,numdays = calendar.monthrange(eyear,emonth)
+            monthend = datetime.datetime(eyear,emonth,numdays,23,59,59)
+            if monthend > endofmonth:
+                endofmonth = monthend
+            if monthstart > lastreviewed:
+                ndkurl = urlparse.urljoin(endyearurl,match)
+                ndkfiles.append(getMonthlyNDK(ndkurl))
 
-        eventmonths = sorted(eventmonths,key=lambda e: e[0])
-        if eventmonths[-1][0] >= recentmonth:
-            f,ndkfilename = tempfile.mkstemp(suffix='.ndk')
-            os.close(f)
-            ndkurl = urlparse.urljoin(endyearurl,eventmonths[-1][1])
-            fh = urllib2.urlopen(ndkurl)
-            data = fh.read()
-            fh.close()
-            ndkfile = open(ndkfilename,'wt')
-            ndkfile.write(data)
-            ndkfile.close()
-            newrecentmonth = eventmonths[-1][1].replace('.ndk','')
-            newstart = addMonth(eventmonths[-1][0])
     except Exception,message:
-        pass
-    return (ndkfilename,newrecentmonth,newstart)
+        raise Exception,'Could not retrieve data from %s.  Message: "%s"' % (MONTHLYURL,message.message)
+    return (ndkfiles,endofmonth)
+
+def getMonthlyNDK(ndkurl):
+    f,ndkfilename = tempfile.mkstemp(suffix='.ndk')
+    os.close(f)
+    fh = urllib2.urlopen(ndkurl)
+    data = fh.read()
+    fh.close()
+    ndkfile = open(ndkfilename,'wt')
+    ndkfile.write(data)
+    ndkfile.close()
+    return ndkfilename
 
 def eventInComCat(event,isdev=False):
     gcmtid = 'gcmt'+event['id']
@@ -115,24 +117,38 @@ if __name__ == '__main__':
                         help='Use development comcat server')
     parser.add_argument('-n','--no-clean', dest='noClean',action='store_true',
                         help='Do not clean up local quakeml files (debugging only!)')
+    parser.add_argument('-t','--test-mode', dest='testMode',action='store_true',
+                        help='Do not attempt to post events into Comcat')
+    
     args = parser.parse_args()
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
-    #months should be stored as mmmyy (i.e., dec12)
-    lastmonthfile = os.path.join(homedir,'lastmonth.txt')
-    if not os.path.isfile(lastmonthfile):
-        lastmonth = 'dec10'
-        months = [lastmonth]
-    else:
-        months = open(lastmonthfile,'rt').readlines()
-        months = [m.strip() for m in months]
-        lastmonth = months[-1]
+
+    #this text file should have key:pair values
+    lastprocessedfile = os.path.join(homedir,'lastprocessed.txt')
+    processdict = {'lastreviewed':datetime.datetime(2010,1,1),'lastquick':datetime.datetime(2010,1,1)}
+    if os.path.isfile(lastprocessedfile):
+        f = open(lastprocessedfile,'rt')
+        for line in f.readlines():
+            pkey,pvalue = line.strip().split('=')
+            if pkey == 'lastreviewed':
+                processdict['lastreviewed'] = datetime.datetime.strptime(pvalue.strip(),TIMEFMT)
+            if pkey == 'lastquick':
+                processdict['lastquick'] = datetime.datetime.strptime(pvalue.strip(),TIMEFMT)
+        f.close()
+
 
     quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',method='Mwc',
                             contributor='us',catalog='gcmt',
                             triggersource='pde')
 
     #download our monthly ndk file and our quick file
-    mndkfile,newlastmonth,newstart = getRecentMonth(lastmonth)
+    mndkfiles,lastreviewed = getRecentMonths(processdict['lastreviewed'])
+    newstart = processdict['lastquick']
+    if lastreviewed > newstart:
+        newstart = lastreviewed - datetime.timedelta(days=7)
+    else:
+        newstart = processdict['lastquick'] - datetime.timedelta(days=7)
+
     #process quick solutions first
     qndkfile = getQuickNDK()
     if qndkfile is None: #couldn't get the quick CMT files
@@ -142,7 +158,7 @@ if __name__ == '__main__':
             continue
         print 'Adding event %s' % event['id']
         quake.add(event)
-    
+
     for event,origins,events in quake.generateEvents():
         #what to do with multiple or no origins?
         quakemlfile = quake.renderXML(event)
@@ -150,36 +166,44 @@ if __name__ == '__main__':
         #debugging remove this before deployment
         # if event['time'] < datetime.datetime.now() - datetime.timedelta(days=30):
         #     continue
-        res,output,errors = quake.push(quakemlfile)
+        if not args.testMode:
+            res,output,errors = quake.push(quakemlfile)
+        if event['time'] > processdict['lastquick']:
+            processdict['lastquick'] = event['time']
 
-    #clean up after ourselves
+    #clean up quick NDK file
     os.remove(qndkfile)
-    #now process monthly reviewed stuff
     #clear the events out of our quakeml object
     quake.clear()
-    #if we have a new month, add it to our lastmonth text file
-    if newlastmonth not in months:
-        months.append(newlastmonth)
-        f = open(lastmonthfile,'wt')
-        for month in months:
-            f.write(month+'\n')
-        f.close()
-        
-    if mndkfile is None:
+    
+    #now process monthly reviewed stuff, if we have a new monthly file at all
+    if not len(mndkfiles):
         quake.clearOutput()
         sys.exit(0)
-    for event in ndk.getEvents([mndkfile],startDate=newstart):
-        quake.add(event)
+    for mndkfile in mndkfiles:
+        for event in ndk.getEvents([mndkfile]):
+            quake.add(event)
 
     for event,origins,events in quake.generateEvents():
         #what to do with multiple or no origins?
         quakemlfile = quake.renderXML(event)
         print 'Rendering reviewed event %s' % event['id']
-        quake.push(quakemlfile)
+        if not args.testMode:
+            quake.push(quakemlfile)
+        if event['time'] > processdict['lastreviewed']:
+            processdict['lastreviewed'] = event['time']
+
+    #Update the lastprocessed text file
+    f = open(lastprocessedfile,'wt')
+    f.write('lastreviewed=%s\n' % processdict['lastreviewed'].strftime(TIMEFMT))
+    f.write('lastquick=%s\n' % processdict['lastquick'].strftime(TIMEFMT))
+    f.close()
+        
     #clean up after ourselves
     if not args.noClean:
         quake.clearOutput()
-    os.remove(mndkfile)
+    for mndkfile in mndkfiles:
+        os.remove(mndkfile)
     sys.exit(0)
     
     
