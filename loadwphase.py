@@ -115,6 +115,11 @@ if __name__ == '__main__':
                         help='Use development comcat server')
     parser.add_argument('-n','--noclean', dest='noClean',action='store_true',
                         help='Leave generated quakeml files behind')
+    parser.add_argument('-t','--test-mode', dest='testMode',action='store_true',
+                        help='Run in test mode - write QuakeML to disk then stop.')
+    parser.add_argument('-m','--moment-category', dest='momentCategory',choices=['teleseismic','regional'],
+                        default='teleseismic',help='Choose the moment tensor category.')
+    
     args = parser.parse_args()
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
     quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',method='Mww',
@@ -129,18 +134,20 @@ if __name__ == '__main__':
         sys.exit(1)
     
     for event in ndk.getEvents([ndkfile]):
+        event['method'] = 'Mww' #we need to override the default Mwc (hack-ish)
+        event['momentcategory'] = args.momentCategory
         quake.add(event)
     
     for event,origins,events in quake.generateEvents():
         #what to do with multiple or no origins?
         quakemlfile = quake.renderXML(event)
-        print 'Rendering quick event %s' % event['id']
-        #debugging remove this before deployment
-        # if event['time'] < datetime.datetime.now() - datetime.timedelta(days=30):
-        #     continue
-        quake.push(quakemlfile)
+        if not args.testMode:
+            print 'Rendering quick event %s' % event['id']
+            quake.push(quakemlfile)
+        else:
+            print 'Saving file %s' % quakemlfile
 
-    if not args.noclean:
+    if not args.noClean:
         os.remove(quakemlfile)
 
     sys.exit(0)

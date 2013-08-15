@@ -79,6 +79,7 @@ class NDKReader(MTReader):
             evalstatus = 'preliminary'
         else:
             evalstatus = 'reviewed'
+        
         mag1 = {'mag':tdict['momentMagnitude'],'method':'Mwc','evalstatus':evalstatus,'evalmode':'manual'}
         record['magnitude'] = [mag1]
         
@@ -106,6 +107,14 @@ class NDKReader(MTReader):
         record['mtp'] = tdict['tensorMtp']
         record['mrp'] = tdict['tensorMrp']
         record['mrt'] = tdict['tensorMrt']
+
+        #get the data used information
+        record['numbodychannels'] = tdict['BodyWaveComponents']
+        record['numbodystations'] = tdict['BodyWaveStations']
+        record['numsurfacechannels'] = tdict['SurfaceWaveComponents']
+        record['numsurfacestations'] = tdict['SurfaceWaveStations']
+        record['nummantlechannels'] = tdict['MantleWaveComponents']
+        record['nummantlestations'] = tdict['MantleWaveStations']
 
         #get the source time stuff
         if tdict['momentRateFunction'].strip() == 'TRIHD':

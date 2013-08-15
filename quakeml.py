@@ -87,6 +87,13 @@ FORMATS = {'id':'%s',
            'duration':'%.1f',
            'risetime':'%.1f',
            'decaytime':'%.1f',
+           'momentcategory':'%s',
+           'numbodychannels':'%i',
+           'numbodystations':'%i',
+           'numsurfacechannels':'%i',
+           'numsurfacestations':'%i',
+           'nummantlechannels':'%i',
+           'nummantlestations':'%i',
            }
 
 MACROPATTERN = r'\[([^]]*)\]'

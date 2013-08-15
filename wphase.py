@@ -35,7 +35,15 @@ def getEvents(args,startDate=None,endDate=None):
         #parts[3] is the GCMT magnitude - we don't care about that here
         event['magnitude'] = [{'mag':float(parts[4]),'method':'Mww','evalstatus':'final','evalmode':'manual'}]
         event['mag'] = float(parts[4])
-        event['numchannels'] = int(parts[5])
+        event['numbodychannels'] = int(parts[5])
+        event['numbodystations'] = 0
+
+        event['numsurfacechannels'] = 0
+        event['numsurfacestations'] = 0
+
+        event['nummantlechannels'] = 0
+        event['nummantlestations'] = 0
+        
         event['gap'] = float(parts[6])
         event['ts'] = float(parts[7])
         event['duration'] = float(parts[8]) * 2

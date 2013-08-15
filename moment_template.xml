@@ -7,6 +7,7 @@
       <focalMechanism publicID="quakeml:[CONTRIBUTOR].anss.org/focalMechanism/[ID]/[METHOD]">
         <triggeringOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[TRIGGERID]</triggeringOriginID>
         <momentTensor publicID="quakeml:[CONTRIBUTOR].anss.org/momentTensor/[ID]/[METHOD]">
+          <category>[MOMENTCATEGORY]</category>
           <derivedOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]</derivedOriginID>
           <momentMagnitudeID>quakeml:[CONTRIBUTOR].anss.org/magnitude/[CATALOG][ID]/[METHOD]</momentMagnitudeID>
           <scalarMoment>
@@ -38,11 +39,27 @@
             <riseTime>[RISETIME]</riseTime>
             <decayTime>[DECAYTIME]</decayTime>
           </sourceTimeFunction>
+          
+          <!-- We can have three possible dataUsed elements - body, -->
+          <!-- surface, and mantle -->
           <dataUsed>
-            <componentCount>
-              [NUMCHANNELS]
-            </componentCount>
+            <waveType>BODY_WAVES</waveType>
+            <componentCount>[NUMBODYCHANNELS]</componentCount>
+            <stationCount>[NUMBODYSTATIONS]</stationCount>
           </dataUsed>
+
+          <dataUsed>
+            <waveType>SURFACE_WAVES</waveType>
+            <componentCount>[NUMSURFACECHANNELS]</componentCount>
+            <stationCount>[NUMSURFACESTATIONS]</stationCount>
+          </dataUsed>
+
+          <dataUsed>
+            <waveType>MANTLE_WAVES</waveType>
+            <componentCount>[NUMMANTLECHANNELS]</componentCount>
+            <stationCount>[NUMMANTLESTATIONS]</stationCount>
+          </dataUsed>
+
         </momentTensor>
         <nodalPlanes>
           <nodalPlane1>
