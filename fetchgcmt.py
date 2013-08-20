@@ -119,6 +119,8 @@ if __name__ == '__main__':
                         help='Do not clean up local quakeml files (debugging only!)')
     parser.add_argument('-t','--test-mode', dest='testMode',action='store_true',
                         help='Do not attempt to post events into Comcat')
+    parser.add_argument('-f','--force', dest='force',action='store_true',
+                        help='Force re-loading of events already found in ComCat.')
     
     args = parser.parse_args()
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
@@ -139,7 +141,7 @@ if __name__ == '__main__':
 
     quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',method='Mwc',
                             contributor='us',catalog='gcmt',
-                            triggersource='pde')
+                            triggersource='pde',agency='gcmt')
 
     #download our monthly ndk file and our quick file
     mndkfiles,lastreviewed = getRecentMonths(processdict['lastreviewed'])
@@ -154,7 +156,7 @@ if __name__ == '__main__':
     if qndkfile is None: #couldn't get the quick CMT files
         sys.exit(1)
     for event in ndk.getEvents([qndkfile],startDate=newstart):
-        if eventInComCat(event,isdev=args.useDev):
+        if not args.force and eventInComCat(event,isdev=args.useDev):
             continue
         print 'Adding event %s' % event['id']
         quake.add(event)
@@ -163,9 +165,6 @@ if __name__ == '__main__':
         #what to do with multiple or no origins?
         quakemlfile = quake.renderXML(event)
         print 'Rendering quick event %s' % event['id']
-        #debugging remove this before deployment
-        # if event['time'] < datetime.datetime.now() - datetime.timedelta(days=30):
-        #     continue
         if not args.testMode:
             res,output,errors = quake.push(quakemlfile)
         if event['time'] > processdict['lastquick']:
