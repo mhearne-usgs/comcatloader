@@ -43,21 +43,21 @@
           <!-- We can have three possible dataUsed elements - body, -->
           <!-- surface, and mantle -->
           <dataUsed>
-            <waveType>BODY_WAVES</waveType>
-            <componentCount>[NUMBODYCHANNELS]</componentCount>
+            <waveType>body waves</waveType>
             <stationCount>[NUMBODYSTATIONS]</stationCount>
+            <componentCount>[NUMBODYCHANNELS]</componentCount>
           </dataUsed>
 
           <dataUsed>
-            <waveType>SURFACE_WAVES</waveType>
-            <componentCount>[NUMSURFACECHANNELS]</componentCount>
+            <waveType>surface waves</waveType>
             <stationCount>[NUMSURFACESTATIONS]</stationCount>
+            <componentCount>[NUMSURFACECHANNELS]</componentCount>
           </dataUsed>
 
           <dataUsed>
-            <waveType>MANTLE_WAVES</waveType>
-            <componentCount>[NUMMANTLECHANNELS]</componentCount>
+            <waveType>mantle waves</waveType>
             <stationCount>[NUMMANTLESTATIONS]</stationCount>
+            <componentCount>[NUMMANTLECHANNELS]</componentCount>
           </dataUsed>
 
         </momentTensor>
@@ -155,8 +155,7 @@
           <value>[DEPTH]</value>
         </depth>
       </origin>
-      <type>earthquake
-      </type>
+      <type>earthquake</type>
     </event>
     <creationInfo>
       <agencyID>[AGENCY]</agencyID>

@@ -71,7 +71,7 @@ class NDKReader(MTReader):
         record['triggerlat'] = tdict['eventLatitude']
         record['triggerlon'] = tdict['eventLongitude']
         record['triggerdepth'] = tdict['eventDepth']
-        record['triggerid'] = tdict['eventSource']+tdict['eventTime'].strftime('%Y%m%d%H%M%S')
+        record['triggerid'] = tdict['eventSource'].strip()+tdict['eventTime'].strftime('%Y%m%d%H%M%S')
 
         #magnitude is now a list of dictionaries
         #each element of list should have keys: mag,method,evalstatus,evalmode
@@ -118,9 +118,9 @@ class NDKReader(MTReader):
 
         #get the source time stuff
         if tdict['momentRateFunction'].strip() == 'TRIHD':
-            record['sourcetimetype'] = 'TRIANGLE'
+            record['sourcetimetype'] = 'triangle'
         else:
-            record['sourcetimetype'] = 'BOX_CAR'
+            record['sourcetimetype'] = 'box car'
         record['duration'] = 2*tdict['momentRateFunctionDuration']
         
         #record['creationtime'] = datetime.datetime.strptime(tdict['timestamp'][2:],'%Y%m%d%H%M%S')
