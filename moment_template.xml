@@ -34,7 +34,7 @@
             </Mtp>
           </tensor>
           <sourceTimeFunction>
-            <sourceTimeFunctionType>[SOURCETIMETYPE]</sourceTimeFunctionType>
+            <type>[SOURCETIMETYPE]</type>
             <duration>[DURATION]</duration>
             <riseTime>[RISETIME]</riseTime>
             <decayTime>[DECAYTIME]</decayTime>
