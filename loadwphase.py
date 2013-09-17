@@ -123,7 +123,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
     quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',method='Mww',
-                            contributor='us',catalog='us',
+                            contributor='us',catalog='us',agency='us',
                             triggersource='pde')
 
 

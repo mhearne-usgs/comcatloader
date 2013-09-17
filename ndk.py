@@ -237,7 +237,7 @@ class NDKReader(MTReader):
         tdict['eigenVectorAzimuths'].append(float(line[44:48]))
 
         tdict['scalarMoment'] = float(line[49:56].strip())*math.pow(10.0,tdict['exponent'])
-        tdict['momentMagnitude'] = ((2.0/3.0) * math.log10(tdict['scalarMoment'])) - 10.73
+        tdict['momentMagnitude'] = (2.0/3.0) * (math.log10(tdict['scalarMoment']) - 16.1)
 
         tdict['nodalPlane1Strike'] = float(line[56:60])
         tdict['nodalPlane1Dip'] = float(line[60:63])
