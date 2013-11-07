@@ -124,7 +124,7 @@ if __name__ == '__main__':
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
     quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',method='Mww',
                             contributor='us',catalog='us',agency='us',
-                            triggersource='pde')
+                            triggersource='us')
 
 
     #get ndk file
@@ -135,12 +135,14 @@ if __name__ == '__main__':
     
     for event in ndk.getEvents([ndkfile]):
         event['method'] = 'Mww' #we need to override the default Mwc (hack-ish)
+        for magobj in event['magnitude']:
+            magobj['method'] = 'Mww'
         event['momentcategory'] = args.momentCategory
         quake.add(event)
     
     for event,origins,events in quake.generateEvents():
         #what to do with multiple or no origins?
-        quakemlfile = quake.renderXML(event)
+        quakemlfile = quake.renderXML(event,origins[0])
         if not args.testMode:
             print 'Rendering quick event %s' % event['id']
             res,output,errors = quake.push(quakemlfile)

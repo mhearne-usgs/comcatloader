@@ -381,9 +381,8 @@ class QuakeML(object):
             mrp = eqdict['mrp']
             mtp = eqdict['mtp']
             eqdict['moment'] = calculateTotalMoment(mrr,mtt,mpp,mrt,mrp,mtp)
-            mag = calculateMagnitude(eqdict['moment'])
         if not eqdict.has_key('magnitude') and self.type != 'origin':
-            eqdict['magnitude'] = calculateMagnitude(eqdict['moment'])
+            eqdict['magnitude'][0]['mag'] = calculateMagnitude(eqdict['moment'])
         
         self.EventList.append(eqdict)
         self.updateCloseEvents()
