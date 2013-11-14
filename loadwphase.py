@@ -22,6 +22,33 @@ MONTHLYURL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_MONTHL
 COMCATBASE = 'http://comcat.cr.usgs.gov/earthquakes/eventpage/[EVENTID]'
 DEVCOMCATBASE = 'http://dev-earthquake.cr.usgs.gov/earthquakes/eventpage/[EVENTID]'
 
+def pushAuto(quakemlfile,event,quake):
+    props = {'eventsource':'us',
+             'eventsourcecode':event['id'],
+             'eventtime':event['time'].strftime('%Y-%m-%dT%H:%M:%SZ'),
+             'latitude':'%.4f' % event['lat'],
+             'longitude':'%.4f' % event['lon'],
+             'depth':'%.1f' % (event['depth']/1000.0),
+             'type':'autowp',
+             'magnitude':'%.1f' % event['magnitude'][0]['mag']}
+    propnuggets = []
+    for key,value in props.iteritems():
+        propnuggets.append('--%s=%s' % (key,value))
+    propstr = ' '.join(propnuggets)
+                        
+    CMD = 'java -jar [PDLFOLDER]/ProductClient.jar %s --configFile=[PDLFOLDER]/[CONFIGFILE] --privateKey=[PDLFOLDER]/[KEYFILE] --file=[QUAKEMLFILE]' % propstr
+
+    pdlfolder = quake.config.get('PDL','folder')
+    pdlkey = quake.config.get('PDL','keyfile')
+    pdlconfig = quake.config.get('PDL','configfile')
+    cmd = CMD.replace('[PDLFOLDER]',pdlfolder)
+    cmd = cmd.replace('[CONFIGFILE]',pdlconfig)
+    cmd = cmd.replace('[KEYFILE]',pdlkey)
+    cmd = cmd.replace('[QUAKEMLFILE]',quakemlfile)
+    res,output,errors = quake.getCommandOutput(cmd)
+    return (res,output,errors)
+    
+
 def getQuickNDK():
     ndkfilename = None
     try:
@@ -111,6 +138,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('ndkfile', metavar='NDKFILE', 
                            help='NDK file to load')
+    parser.add_argument('-a','--auto', dest='autoMode',action='store_true',
+                        help='Send this as an "autowp" product (essentially preliminary w-phase product)')
     parser.add_argument('-d','--dev', dest='useDev',action='store_true',
                         help='Use development comcat server')
     parser.add_argument('-n','--noclean', dest='noClean',action='store_true',
@@ -145,7 +174,10 @@ if __name__ == '__main__':
         quakemlfile = quake.renderXML(event,origins[0])
         if not args.testMode:
             print 'Rendering quick event %s' % event['id']
-            res,output,errors = quake.push(quakemlfile)
+            if args.autoMode:
+                res,output,errors = pushAuto(quakemlfile,event,quake)
+            else:
+                res,output,errors = quake.push(quakemlfile)
             if res:
                 print output
             else:
