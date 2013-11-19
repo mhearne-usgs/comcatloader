@@ -137,9 +137,6 @@
         <latitude>
           <value>[TRIGGERLAT]</value>
         </latitude>
-        <depth>
-          <value>[TRIGGERDEPTH]</value>
-        </depth>
       </origin>
       <origin publicID="quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]">
         <time>

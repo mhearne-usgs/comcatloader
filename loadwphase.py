@@ -171,7 +171,7 @@ if __name__ == '__main__':
     
     for event,origins,events in quake.generateEvents():
         #what to do with multiple or no origins?
-        quakemlfile = quake.renderXML(event,origins[0])
+        quakemlfile = quake.renderXML(event)
         if not args.testMode:
             print 'Rendering quick event %s' % event['id']
             if args.autoMode:
