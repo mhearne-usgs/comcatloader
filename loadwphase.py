@@ -12,6 +12,7 @@ import tempfile
 import datetime
 import sys
 import argparse
+import string
 
 #local imports
 import quakeml
@@ -152,7 +153,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
     quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',method='Mww',
-                            contributor='us',catalog='us',agency='us',
+                            contributor='us',catalog=None,agency='us',
                             triggersource='us')
 
 
@@ -166,7 +167,21 @@ if __name__ == '__main__':
         event['method'] = 'Mww' #we need to override the default Mwc (hack-ish)
         for magobj in event['magnitude']:
             magobj['method'] = 'Mww'
+        
         event['momentcategory'] = args.momentCategory
+
+        #we need to deal with the fact that internal NDK files
+        #will have ids that look like "usb000abcd" or "pt12345678", 
+        #and GCMT will have ones that look more like "C200501010120A"
+        triggers = quake.config.get('TRIGGERS','networks').split(',')
+        network = event['id'][0:2].lower()
+        isString = network[0] in string.ascii_letters and network[1] in string.ascii_letters
+        if isString and network in triggers:
+           quake.catalog = network
+           event['id'] = event['id'][2:]
+        else:
+            quake.catalog = 'us'
+        
         quake.add(event)
     
     for event,origins,events in quake.generateEvents():
