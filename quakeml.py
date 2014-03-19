@@ -23,8 +23,8 @@ import numpy
 import pytz
 
 #local imports
-from pagermap import distance
-from pagerutil import timeutil
+from neicmap import distance
+from neicutil import timeutil
 
 #module constants
 ORIGIN = 'origin'
