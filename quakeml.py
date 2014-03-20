@@ -444,7 +444,7 @@ class QuakeML(object):
                  'maxlatitude':maxlat,'maxlongitude':maxlon,
                  'starttime':mintime.strftime(APITIMEFMT),'endtime':maxtime.strftime(APITIMEFMT),
                  'catalog':self.triggersource,'format':'geojson','eventtype':'earthquake'}
-        if self.triggersource == "":
+        if self.triggersource == "" or self.triggersource is None:
             pdict.pop('catalog')
         params = urllib.urlencode(pdict)
         searchurl = searchurl % params
@@ -465,7 +465,7 @@ class QuakeML(object):
                 otime = int(feature['properties']['time'])
                 eventdict['time'] = parseTime(otime)
                 idlist = feature['properties']['ids'].strip(',').split(',')
-                eventdict['id'] = idlist[0]
+                eventdict['id'] = feature['id']
                 euclid,ddist,tdist = getEuclidean(lat,lon,etime,eventdict['lat'],eventdict['lon'],eventdict['time'])
                 eventdict['euclidean'] = euclid
                 eventdict['timedelta'] = tdist

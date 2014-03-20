@@ -15,8 +15,9 @@ DEFAULT_START = datetime.datetime(1000,1,1)
 DEFAULT_END = datetime.datetime(3000,1,1)
 
 def getSummary(event,origins,oidx):
+    mag = event['magnitude'][0]['mag']
     fmt = '%s M%.1f (%.4f,%.4f) %.1f km'
-    tpl = (event['time'].strftime('%Y-%m-%d %H:%M:%S'),event['mag'],event['lat'],event['lon'],event['depth'])
+    tpl = (event['time'].strftime('%Y-%m-%d %H:%M:%S'),mag,event['lat'],event['lon'],event['depth'])
     eventdesc = fmt % tpl
     summary = ''
     if not len(origins):
@@ -59,7 +60,7 @@ def processEvent(quake,event,origins,events,numevents,ievent):
     nevents = len(events)
     mag = event['magnitude'][0]['mag']
     eventdesc = '%s: %s M%.1f (%.4f,%.4f)' % (event['id'],str(event['time']),mag,event['lat'],event['lon'])
-    ofmt = '\t%i) %s M%.1f (%.4f,%.4f) %.1f km - %.1f km distance, %i seconds'
+    ofmt = '\t%i) %s M%.1f (%.4f,%.4f) %.1f km - %.1f km distance, %i seconds - %s'
     oidx = -1
     if norg == 1:
         filename = quake.renderXML(event,origins[0])
@@ -72,7 +73,7 @@ def processEvent(quake,event,origins,events,numevents,ievent):
             print 'No events associated with %s' % eventdesc            
     if norg > 1:
         fmt = 'Event %s M%.1f (%.4f,%.4f) %.1f km has %i possible associations:'
-        tpl = (event['time'],event['mag'],event['lat'],event['lon'],event['depth'],norg)
+        tpl = (event['time'],mag,event['lat'],event['lon'],event['depth']/1000,norg)
         print
         print fmt % tpl
         ic = 0
@@ -86,7 +87,7 @@ def processEvent(quake,event,origins,events,numevents,ievent):
             depth = origin['depth']
             timedelta = origin['timedelta']
             distance = origin['distance']
-            tpl = (ic,time,mag,lat,lon,depth,distance,timedelta)
+            tpl = (ic,time,mag,lat,lon,depth,distance,timedelta,origin['id'])
             try:
                 print ofmt % tpl
             except:
@@ -216,6 +217,7 @@ def main(options,args):
         if event['time'] > datetime.datetime(2007,9,30):
             pass
         quake.add(event)
+        sys.stderr.write('Parsing event %s\n' % event['time'])
         numevents += 1
         
     numnear = len(quake.NearEventIndices)
