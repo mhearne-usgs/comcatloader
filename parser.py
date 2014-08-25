@@ -6,6 +6,7 @@ import os.path
 import datetime
 import optparse
 import importlib
+from xml.dom import minidom
 
 #local imports
 import quakeml
@@ -13,6 +14,15 @@ import quakeml
 TIMEFMT = '%Y-%m-%d %H:%M:%S'
 DEFAULT_START = datetime.datetime(1000,1,1)
 DEFAULT_END = datetime.datetime(3000,1,1)
+
+def getEventTime(xmlfile):
+    root = minidom.parse(xmlfile)
+    origin = root.getElementsByTagName('origin')[0] #we don't care which origin
+    timestr = origin.getElementsByTagName('time')[0].getElementsByTagName('value')[0].firstChild.data
+    #2012-09-04T06:55:01Z
+    time = datetime.datetime.strptime(timestr,'%Y-%m-%dT%H:%M:%S')
+    root.unlink()
+    return time
 
 def getSummary(event,origins,oidx):
     mag = event['magnitude'][0]['mag']
@@ -236,7 +246,9 @@ def main(options,args):
         for xmlfile in xmlfiles:
             if xmlfile is None:
                 continue
-            res,output,errors = quake.push(xmlfile,options.trumpWeight)
+            etime = getEventTime(xmlfile)
+            nelapsed = (datetime.datetime.utcnow() - etime).days
+            res,output,errors = quake.push(xmlfile,options.trumpWeight,nelapsed=nelapsed)
             p,fname = os.path.split(xmlfile)
             if not res:
                 print 'Failed to send quakeML file %s. Output: "%s" Error: "%s"' % (fname,output,errors)

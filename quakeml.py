@@ -59,7 +59,7 @@ FORMATS = {'id':'%s',
            'triggerlon':'%.4f',
            'triggerdepth':'%.1f',
            'triggerid':'%s',
-           'moment':'%.2e',
+           'moment':'%.3e',
            'tazimuth':'%i',
            'tplunge':'%i',
            'tvalue':'%.1e',
@@ -271,13 +271,22 @@ class QuakeML(object):
             except Exception,expobj:
                 raise 'Could not create directory "%s"'
 
-    def push(self,quakemlfile,trumpWeight=None):
-        MCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --mainclass=gov.usgs.earthquake.eids.EIDSInputWedge --parser=gov.usgs.earthquake.eids.QuakemlProductCreator --configFile=[PDLFOLDER]/[CONFIGFILE] --privateKey=[PDLFOLDER]/[KEYFILE] --file=[QUAKEMLFILE]'
+    def push(self,quakemlfile,trumpWeight=None,nelapsed=None):
+        MCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --mainclass=gov.usgs.earthquake.eids.EIDSInputWedge --configFile=[PDLFOLDER]/[CONFIGFILE] --privateKey=[PDLFOLDER]/[KEYFILE] --file=[QUAKEMLFILE]'
         TCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --send --configFile=[PDLFOLDER]/[CONFIGFILE] --privateKey=[PDLFOLDER]/[KEYFILE] --source=us --code=[ID] --property-weight=[WEIGHT] --link-product=urn:usgs-product:[CONTRIBUTOR]:origin:[CATALOG][ID]:[VERSION]'
 
         pdlfolder = self.config.get('PDL','folder')
         pdlkey = self.config.get('PDL','keyfile')
-        pdlconfig = self.config.get('PDL','configfile')
+
+        #There are two different PDL servers to use depending on whether one wants the event to be searchable in the
+        #real-time feed, or only in the catalog search.
+        if nelapsed is None:
+            nelapsed = 31
+        if nelapsed <= 30:
+            pdlconfig = self.config.get('PDL','realtimeconfig')
+        else:
+            pdlconfig = self.config.get('PDL','catalogconfig')
+
         cmd = MCMD.replace('[PDLFOLDER]',pdlfolder)
         cmd = cmd.replace('[CONFIGFILE]',pdlconfig)
         cmd = cmd.replace('[KEYFILE]',pdlkey)
@@ -645,11 +654,11 @@ class QuakeML(object):
             event = self.EventList[i]
             events = [] #will contain list of events that are "near" this event
             origins = []
-            if self.type == 'focal' or self.type == 'moment':
-                origins = self.associate2(event)
-                for otuple in self.NearEventIndices:
-                    if i in otuple:
-                        events.append(copy.deepcopy(self.EventList[otuple[0]]))
+            # if self.type == 'focal' or self.type == 'moment':
+            #     origins = self.associate2(event)
+            #     for otuple in self.NearEventIndices:
+            #         if i in otuple:
+            #             events.append(copy.deepcopy(self.EventList[otuple[0]]))
             yield (event,origins,events)
             i += 1
 

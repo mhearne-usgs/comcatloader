@@ -192,7 +192,8 @@ if __name__ == '__main__':
             if args.autoMode:
                 res,output,errors = pushAuto(quakemlfile,event,quake)
             else:
-                res,output,errors = quake.push(quakemlfile)
+                nelapsed = (datetime.datetime.utcnow() - event['time']).days
+                res,output,errors = quake.push(quakemlfile,nelapsed=nelapsed)
             if res:
                 print output
             else:

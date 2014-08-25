@@ -58,8 +58,8 @@ class NDKReader(MTReader):
         
     def trimFields(self,tdict):
         record = {}
-        #record['id'] = tdict['eventTime'].strftime('%Y%m%d%H%M%S')
-        record['id'] = tdict['eventID']
+        record['id'] = tdict['eventTime'].strftime('%Y%m%d%H%M%S')
+        #record['id'] = tdict['eventID']
         #use the derived epicenter and time as the product epicenter
         record['type'] = self.type
         record['time'] = tdict['derivedEventTime']
@@ -83,6 +83,9 @@ class NDKReader(MTReader):
         
         mag1 = {'mag':tdict['momentMagnitude'],'method':'Mwc','evalstatus':evalstatus,'evalmode':'manual'}
         record['magnitude'] = [mag1]
+
+        #get the scalar moment in here
+        record['moment'] = tdict['scalarMoment']
         
         record['tazimuth'] = tdict['eigenVectorAzimuths'][0]
         record['tplunge'] = tdict['eigenVectorPlunges'][0]
@@ -239,6 +242,7 @@ class NDKReader(MTReader):
 
         tdict['scalarMoment'] = float(line[49:56].strip())*math.pow(10.0,tdict['exponent'])
         tdict['momentMagnitude'] = (2.0/3.0) * (math.log10(tdict['scalarMoment']) - 16.1)
+        tdict['momentMagnitude'] = round(tdict['momentMagnitude'] * 10.0)/10.0
 
         tdict['nodalPlane1Strike'] = float(line[56:60])
         tdict['nodalPlane1Dip'] = float(line[60:63])

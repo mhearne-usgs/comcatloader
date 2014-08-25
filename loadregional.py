@@ -143,7 +143,8 @@ if __name__ == '__main__':
         quakemlfile = quake.renderXML(event)
         if not args.testMode:
             print 'Rendering quick event %s' % event['id']
-            quake.push(quakemlfile)
+            nelapsed = (datetime.datetime.utcnow() - event['time']).days
+            res,output,errors = quake.push(quakemlfile,nelapsed=nelapsed)
         else:
             print 'Saving file %s' % quakemlfile
 

@@ -49,9 +49,8 @@ def addMonth(dinput):
         month += 1
     doutput = datetime.datetime(year,month,1)
     return doutput
-        
-    
-def getRecentMonths(lastreviewed):
+
+def getAllMonths(lastreviewed):
     months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
     endofmonth = datetime.datetime(1990,1,1)
     ndkfiles = []
@@ -61,27 +60,57 @@ def getRecentMonths(lastreviewed):
         fh.close()
         matches = re.findall('>[0-9]{4}\/<',data)
         matches = sorted(matches)
-        endyear = matches[-1][1:6]
-        endyearurl = urlparse.urljoin(MONTHLYURL,endyear)
-        fh = urllib2.urlopen(endyearurl)
+        ndkfiles = []
+        for match in matches:
+            myear = int(match[1:5])
+            checkdate = datetime.datetime(myear,1,1)
+            if checkdate <= lastreviewed:
+                continue
+            tndkfiles,tmonth = getYearMonths(myear,lastreviewed)
+            if tmonth > endofmonth:
+                endofmonth = tmonth
+            ndkfiles += tndkfiles
+    except Exception,message:
+        raise Exception,'Could not retrieve data from %s.  Message: "%s"' % (MONTHLYURL,message.message)
+
+    return (ndkfiles,endofmonth)
+
+def getYearMonths(year,lastreviewed):
+    months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+    ndkfiles = []
+    yearurl = urlparse.urljoin(MONTHLYURL,str(year)+'/')
+    fh = urllib2.urlopen(yearurl)
+    data = fh.read()
+    fh.close()
+    endofmonth = datetime.datetime(1990,1,1)
+    pat = '[a-z]{3}[0-9]{2}\.ndk'
+    matches = re.findall(pat,data)
+    matches = list(set(matches)) #unique values
+    eventmonths = []
+    for match in matches:
+        eyear = int(match[3:5]) + 2000
+        emonth = months.index(match[0:3]) + 1
+        monthstart = datetime.datetime(eyear,emonth,1)
+        wkday,numdays = calendar.monthrange(eyear,emonth)
+        monthend = datetime.datetime(eyear,emonth,numdays,23,59,59)
+        if monthend > endofmonth:
+            endofmonth = monthend
+        if monthstart > lastreviewed:
+            ndkurl = urlparse.urljoin(yearurl,match)
+            ndkfiles.append(getMonthlyNDK(ndkurl))
+    return (ndkfiles,endofmonth)
+    
+def getRecentMonths(lastreviewed):
+    ndkfiles = []
+    try:
+        fh = urllib2.urlopen(MONTHLYURL)
         data = fh.read()
         fh.close()
-        pat = '[a-z]{3}[0-9]{2}\.ndk'
-        matches = re.findall(pat,data)
-        matches = list(set(matches)) #unique values
-        eventmonths = []
-        for match in matches:
-            eyear = int(match[3:5]) + 2000
-            emonth = months.index(match[0:3]) + 1
-            monthstart = datetime.datetime(eyear,emonth,1)
-            wkday,numdays = calendar.monthrange(eyear,emonth)
-            monthend = datetime.datetime(eyear,emonth,numdays,23,59,59)
-            if monthend > endofmonth:
-                endofmonth = monthend
-            if monthstart > lastreviewed:
-                ndkurl = urlparse.urljoin(endyearurl,match)
-                ndkfiles.append(getMonthlyNDK(ndkurl))
-
+        matches = re.findall('>[0-9]{4}\/<',data)
+        matches = sorted(matches)
+        endyear = int(matches[-1][1:5])
+        tndkfiles,endofmonth = getYearMonths(endyear,lastreviewed)
+        ndkfiles += tndkfiles
     except Exception,message:
         raise Exception,'Could not retrieve data from %s.  Message: "%s"' % (MONTHLYURL,message.message)
     return (ndkfiles,endofmonth)
@@ -121,6 +150,8 @@ if __name__ == '__main__':
                         help='Do not attempt to post events into Comcat')
     parser.add_argument('-f','--force', dest='force',action='store_true',
                         help='Force re-loading of events already found in ComCat.')
+    parser.add_argument('-a','--alldata', dest='alldata',action='store_true',
+                        help='Retrieve all data since last processtime (defaults to only current year).')
     
     args = parser.parse_args()
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
@@ -144,7 +175,10 @@ if __name__ == '__main__':
                             triggersource='pde',agency='gcmt')
 
     #download our monthly ndk file and our quick file
-    mndkfiles,lastreviewed = getRecentMonths(processdict['lastreviewed'])
+    if args.alldata:
+        mndkfiles,lastreviewed = getAllMonths(processdict['lastreviewed'])
+    else:
+        mndkfiles,lastreviewed = getRecentMonths(processdict['lastreviewed'])
     newstart = processdict['lastquick']
     if lastreviewed > newstart:
         newstart = lastreviewed - datetime.timedelta(days=7)
@@ -166,7 +200,8 @@ if __name__ == '__main__':
         quakemlfile = quake.renderXML(event)
         print 'Rendering quick event %s' % event['id']
         if not args.testMode:
-            res,output,errors = quake.push(quakemlfile)
+            nelapsed = (datetime.datetime.utcnow() - event['time']).days
+            res,output,errors = quake.push(quakemlfile,nelapsed=nelapsed)
         if event['time'] > processdict['lastquick']:
             processdict['lastquick'] = event['time']
 
@@ -188,7 +223,8 @@ if __name__ == '__main__':
         quakemlfile = quake.renderXML(event)
         print 'Rendering reviewed event %s' % event['id']
         if not args.testMode:
-            quake.push(quakemlfile)
+            nelapsed = (datetime.datetime.utcnow() - event['time']).days
+            quake.push(quakemlfile,nelapsed=nelapsed)
         if event['time'] > processdict['lastreviewed']:
             processdict['lastreviewed'] = event['time']
 
