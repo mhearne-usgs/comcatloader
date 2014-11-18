@@ -165,6 +165,7 @@ if __name__ == '__main__':
     
     for event in ndk.getEvents([ndkfile]):
         event['method'] = 'Mww' #we need to override the default Mwc (hack-ish)
+        event['id'] = event['origid'] #GCMT NDK files use timestamps, we want the original ID for Mww
         for magobj in event['magnitude']:
             magobj['method'] = 'Mww'
         

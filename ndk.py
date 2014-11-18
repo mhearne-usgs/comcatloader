@@ -59,7 +59,7 @@ class NDKReader(MTReader):
     def trimFields(self,tdict):
         record = {}
         record['id'] = tdict['eventTime'].strftime('%Y%m%d%H%M%S')
-        #record['id'] = tdict['eventID']
+        record['origid'] = tdict['eventID']
         #use the derived epicenter and time as the product epicenter
         record['type'] = self.type
         record['time'] = tdict['derivedEventTime']
