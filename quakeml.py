@@ -272,6 +272,7 @@ class QuakeML(object):
                 raise 'Could not create directory "%s"'
 
     def delete(self,event):
+        typedict = {'origin':'origin','focal':'focal-mechanism','moment':'moment-tensor'}
         DCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --send --source=[SOURCE] --configfile=[PDLFOLDER]/[CONFIGFILE] --code=[EVENTID] --type=[TYPE] --delete --privateKey=[PDLFOLDER]/[PDLKEY]'
         eid = event['id']
         pdlfolder = self.config.get('PDL','folder')
@@ -290,7 +291,7 @@ class QuakeML(object):
         cmd = cmd.replace('[PDLKEY]',pdlkey)
         cmd = cmd.replace('[SOURCE]',self.catalog)
         cmd = cmd.replace('[EVENTID]',eid)
-        cmd = cmd.replace('[TYPE]',self.type)
+        cmd = cmd.replace('[TYPE]',typedict[self.type])
         res,output,errors = getCommandOutput(cmd)
         return (res,output,errors)
         
