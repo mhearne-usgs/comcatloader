@@ -20,7 +20,7 @@ def getEventTime(xmlfile):
     origin = root.getElementsByTagName('origin')[0] #we don't care which origin
     timestr = origin.getElementsByTagName('time')[0].getElementsByTagName('value')[0].firstChild.data
     #2012-09-04T06:55:01Z
-    time = datetime.datetime.strptime(timestr,'%Y-%m-%dT%H:%M:%S')
+    time = datetime.datetime.strptime(timestr[0:19],'%Y-%m-%dT%H:%M:%S')
     root.unlink()
     return time
 
