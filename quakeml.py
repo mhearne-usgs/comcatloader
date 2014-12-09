@@ -279,8 +279,7 @@ class QuakeML(object):
 
         #There are two different PDL servers to use depending on whether one wants the event to be searchable in the
         #real-time feed, or only in the catalog search.
-        if nelapsed is None:
-            nelapsed = 31
+        nelapsed = (datetime.datetime.utcnow() - event['time']).days
         if nelapsed <= 30:
             pdlconfig = self.config.get('PDL','realtimeconfig')
         else:
