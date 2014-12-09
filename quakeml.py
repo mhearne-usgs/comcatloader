@@ -277,6 +277,15 @@ class QuakeML(object):
         pdlfolder = self.config.get('PDL','folder')
         pdlkey = self.config.get('PDL','keyfile')
 
+        #There are two different PDL servers to use depending on whether one wants the event to be searchable in the
+        #real-time feed, or only in the catalog search.
+        if nelapsed is None:
+            nelapsed = 31
+        if nelapsed <= 30:
+            pdlconfig = self.config.get('PDL','realtimeconfig')
+        else:
+            pdlconfig = self.config.get('PDL','catalogconfig')
+        
         cmd = DCMD.replace('[PDLFOLDER]',pdlfolder)
         cmd = cmd.replace('[CONFIGFILE]',pdlconfig)
         cmd = cmd.replace('[PDLKEY]',pdlkey)
