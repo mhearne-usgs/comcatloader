@@ -213,6 +213,15 @@ def main(options,args):
     earliest = datetime.datetime(3000,1,1)
     latest = datetime.datetime(1,1,1)
     xmlfiles = []
+
+    if options.delete:
+        numdeleted = 0
+        for event in module.getEvents(args[1:],startDate=startdate,endDate=enddate):
+            quake.delete(event)
+            numdeleted += 1
+        print '%i events were deleted.  Exiting.' % numdeleted
+        sys.exit(0)
+    
     numevents = 0
     #the module getEvents() function doesn't have to do anything with the startDate and endDate parameters
     for event in module.getEvents(args[1:],startDate=startdate,endDate=enddate):
@@ -242,6 +251,8 @@ def main(options,args):
         xmlfiles.append(xmlfile)
         numprocessed += 1
 
+    
+        
     if options.load:
         for xmlfile in xmlfiles:
             if xmlfile is None:
@@ -302,6 +313,9 @@ if __name__ == '__main__':
     parser.add_option("-c", "--clear",
                   action="store_true", dest="clear", default=False,
                   help="Clear XML output")
+    parser.add_option("-x", "--delete",
+                  action="store_true", dest="delete", default=False,
+                  help="Delete specified products")
     
 
     (options, args) = parser.parse_args()

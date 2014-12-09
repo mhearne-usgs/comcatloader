@@ -271,6 +271,20 @@ class QuakeML(object):
             except Exception,expobj:
                 raise 'Could not create directory "%s"'
 
+    def delete(self,event):
+        DCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --send --source=[SOURCE] --configfile=[PDLFOLDER]/[CONFIGFILE] --type=[TYPE] --code=[EVENTID] --delete --privateKey=[PDLFOLDER]/[PDLKEY]'
+        eid = event['id']
+        pdlfolder = self.config.get('PDL','folder')
+        pdlkey = self.config.get('PDL','keyfile')
+
+        cmd = DCMD.replace('[PDLFOLDER]',pdlfolder)
+        cmd = cmd.replace('[CONFIGFILE]',pdlconfig)
+        cmd = cmd.replace('[PDLKEY]',pdlkey)
+        cmd = cmd.replace('[SOURCE]',self.source)
+        cmd = cmd.replace('[EVENTID]',eid)
+        res,output,errors = getCommandOutput(cmd)
+        return (res,output,errors)
+        
     def push(self,quakemlfile,trumpWeight=None,nelapsed=None):
         MCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --mainclass=gov.usgs.earthquake.eids.EIDSInputWedge --configFile=[PDLFOLDER]/[CONFIGFILE] --privateKey=[PDLFOLDER]/[KEYFILE] --file=[QUAKEMLFILE]'
         TCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --send --configFile=[PDLFOLDER]/[CONFIGFILE] --privateKey=[PDLFOLDER]/[KEYFILE] --source=us --code=[ID] --property-weight=[WEIGHT] --link-product=urn:usgs-product:[CONTRIBUTOR]:origin:[CATALOG][ID]:[VERSION]'
