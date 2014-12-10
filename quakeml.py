@@ -273,7 +273,7 @@ class QuakeML(object):
 
     def delete(self,event):
         typedict = {'origin':'origin','focal':'focal-mechanism','moment':'moment-tensor'}
-        DCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --send --source=[SOURCE] --configfile=[PDLFOLDER]/[CONFIGFILE] --code=[EVENTID] --type=[TYPE] --delete --privateKey=[PDLFOLDER]/[PDLKEY]'
+        DCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --send --source=[SOURCE] --configFile=[PDLFOLDER]/[CONFIGFILE] --code=[EVENTID] --type=[TYPE] --delete --privateKey=[PDLFOLDER]/[PDLKEY]'
         eid = event['id']
         pdlfolder = self.config.get('PDL','folder')
         pdlkey = self.config.get('PDL','keyfile')
