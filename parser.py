@@ -76,11 +76,8 @@ def processEvent(quake,event,origins,events,numevents,ievent):
         filename = quake.renderXML(event,origins[0])
         print 'Writing event %s to file (%i of %i).' % (eventdesc,ievent,numevents)
     if norg == 0:
-        if quake.type == quakeml.ORIGIN:
-            filename = quake.renderXML(event)
-            print 'Rendering origin %s to XML' % eventdesc
-        else:
-            print 'No events associated with %s' % eventdesc            
+        filename = quake.renderXML(event)
+        print 'Rendering origin %s to XML' % eventdesc
     if norg > 1:
         fmt = 'Event %s M%.1f (%.4f,%.4f) %.1f km has %i possible associations:'
         tpl = (event['time'],mag,event['lat'],event['lon'],event['depth']/1000,norg)
