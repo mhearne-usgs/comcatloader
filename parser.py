@@ -247,8 +247,6 @@ def main(options,args):
             summary.append(getSummary(event,origins,oidx))
         xmlfiles.append(xmlfile)
         numprocessed += 1
-
-    
         
     if options.load:
         for xmlfile in xmlfiles:

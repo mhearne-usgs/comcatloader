@@ -294,7 +294,92 @@ class QuakeML(object):
         cmd = cmd.replace('[TYPE]',typedict[self.type])
         res,output,errors = getCommandOutput(cmd)
         return (res,output,errors)
+
+    def getOriginDict(self,quakemlfile):
+        origin = {}
+        root = minidom.parse(quakemlfile)
+        originid = None
+        idlist = root.getElementsByTagName('derivedOriginID')
+        event = root.getElementsByTagName('event')[0]
+        eventid = event.getAttribute('catalog:eventid')
+        eventsource = event.getAttribute('catalog:eventsource')
+        if len(idlist):
+            originid = idlist[0].firstChild.data
+        else:
+            idlist = root.getElementsByTagName('triggeringOriginID')
+            if len(idlist):
+                originid = idlist[0].firstChild.data
+        originlist = root.getElementsByTagName('origin')
+        origin = None
+        if originid is None:
+            if not len(originlist):
+                root.unlink()
+                return None
+            origin = originlist[0]
+        else:
+            for torigin in originlist:
+                if torigin.getAttribute('publicID') == originid:
+                    origin = torigin
+                    break
+        if origin is None:
+            root.unlink()
+            return None
+        magidlist = root.getElementsByTagName('preferredMagnitudeID')
+        maglist = root.getElementsByTagName('magnitude')
+        magvalue = None
+        if not len(magidlist):
+            for mag in maglist:
+                magstr = mag.getElementsByTagName('mag')[0].getElementsByTagName('value')[0].firstChild.data
+                magvalue = float(magstr)
+                break
+        else:
+            magid = magidlist[0].firstChild.data
+            for mag in maglist:
+                if mag.getAttribute('publicID') == magid:
+                    magstr = mag.getElementsByTagName('mag')[0].getElementsByTagName('value')[0].firstChild.data
+                    magvalue = float(magstr)
+                    break
+
+        if magvalue is None:
+            root.unlink()
+            return None
+        origindict = {}
+        origindict['mag'] = magvalue
+        origindict['eventid'] = eventid
+        origindict['eventsource'] = eventsource
+        timestr = origin.getElementsByTagName('time')[0].getElementsByTagName('value')[0].firstChild.data
+        origindict['time'] = datetime.datetime.strptime(timestr,TIMEFMT)
+        origindict['lat'] = float(origin.getElementsByTagName('latitude')[0].getElementsByTagName('value')[0].firstChild.data)
+        origindict['lon'] = float(origin.getElementsByTagName('longitude')[0].getElementsByTagName('value')[0].firstChild.data)
+        origindict['depth'] = float(origin.getElementsByTagName('depth')[0].getElementsByTagName('value')[0].firstChild.data)/1000.0
+        root.unlink()
+        return origindict
+    
+    def pushOrigin(self,quakemlfile,pdlconfig):
+        types = {'moment':'moment-tensor','focal':'focal-mechanism'}
+        pdlfolder = self.config.get('PDL','folder')
+        pdlkey = self.config.get('PDL','keyfile')
+        OCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --send --configFile=[PDLFOLDER]/[CONFIGFILE] --privateKey=[PDLFOLDER]/[KEYFILE] eventsource=[SOURCE] --eventsourcecode=[CODE] --code=[ID] --source=us --type=origin --eventtime=[ETIME] --latitude=[LAT] --longitude=[LON] --depth=[DEP] --magnitude=[MAG]'
+        cmd = OCMD.replace('[PDLFOLDER]',pdlfolder)
+        cmd = cmd.replace('[CONFIGFILE]',pdlconfig)
+        cmd = cmd.replace('[KEYFILE]',pdlkey)
+        cmd = cmd.replace('[QUAKEMLFILE]',quakemlfile)
+        origin = self.getOriginDict(quakemlfile)
+        if origin is None:
+            raise Exception,'Could not find an origin in QuakeML file "%s".' % quakemlfile
+        cmd = cmd.replace('[ID]',origin['eventsource']+origin['eventid'])
+        cmd = cmd.replace('[SOURCE]',origin['eventsource'])
+        cmd = cmd.replace('[CODE]',origin['eventid'])
+        cmd = cmd.replace('[ETIME]',origin['time'].strftime(TIMEFMT))
+        cmd = cmd.replace('[LAT]','%.4f' % origin['lat'])
+        cmd = cmd.replace('[LON]','%.4f' % origin['lon'])
+        cmd = cmd.replace('[DEP]','%.1f' % origin['depth'])
+        cmd = cmd.replace('[MAG]','%.1f' % origin['mag'])
+        cmd = cmd.replace('[TYPE]',types[self.type])
+        res,output,errors = getCommandOutput(cmd)
+        return res,output,errors
         
+    
     def push(self,quakemlfile,trumpWeight=None,nelapsed=None):
         MCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --mainclass=gov.usgs.earthquake.eids.EIDSInputWedge --configFile=[PDLFOLDER]/[CONFIGFILE] --privateKey=[PDLFOLDER]/[KEYFILE] --file=[QUAKEMLFILE]'
         TCMD = 'java -jar [PDLFOLDER]/ProductClient.jar --send --configFile=[PDLFOLDER]/[CONFIGFILE] --privateKey=[PDLFOLDER]/[KEYFILE] --source=us --code=[ID] --property-weight=[WEIGHT] --link-product=urn:usgs-product:[CONTRIBUTOR]:origin:[CATALOG][ID]:[VERSION]'
@@ -311,6 +396,9 @@ class QuakeML(object):
         else:
             pdlconfig = self.config.get('PDL','catalogconfig')
 
+        # if self.type in ['moment','focal']:
+        #     res,output,errors = self.pushOrigin(quakemlfile,pdlconfig)
+            
         cmd = MCMD.replace('[PDLFOLDER]',pdlfolder)
         cmd = cmd.replace('[CONFIGFILE]',pdlconfig)
         cmd = cmd.replace('[KEYFILE]',pdlkey)

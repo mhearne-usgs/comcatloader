@@ -138,6 +138,7 @@
           <value>[TRIGGERLAT]</value>
         </latitude>
       </origin>
+      <preferredOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]</preferredOriginID>
       <origin publicID="quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]">
         <time>
           <value>[TIME]</value>
