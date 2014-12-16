@@ -292,6 +292,7 @@ class QuakeML(object):
         cmd = cmd.replace('[SOURCE]',self.catalog)
         cmd = cmd.replace('[EVENTID]',eid)
         cmd = cmd.replace('[TYPE]',typedict[self.type])
+        print 'Deleting event %s' % eid
         res,output,errors = getCommandOutput(cmd)
         return (res,output,errors)
 

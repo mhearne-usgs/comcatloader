@@ -13,7 +13,11 @@ import urllib,urllib2
 
 TIMEFMT = '%Y-%m-%dT%H:%M:%S.%f'
 
-def getEvents(args):
+def getEvents(args,startDate=None,endDate=None):
+    if startDate is None:
+        startDate = datetime.datetime(1800,1,1)
+    if endDate is None:
+        endDate = datetime.utcnow()
     fname = args[0]
     if not os.path.isfile(fname):
         raise Exception('File %s does not exist' % fname)
@@ -45,11 +49,13 @@ def getEvents(args):
             second = 0
         microsecond = int(int(timestr[7:9])*1e4) #multiplying hundredths of a second by 10000
         time = datetime.datetime(year,month,day,hour,minute,second,microsecond)
+        if time < startDate or time > endDate:
+            continue
         line = line[10:]
         parts = line.split()
         event = {}
         event['time'] = time
-        event['id'] = time.strftime('emag%Y%m%d%H%M%S')
+        event['id'] = time.strftime('%Y%m%d%H%M%S')
         event['lat'] = float(parts[0])
         event['lon'] = float(parts[1])
         event['depth'] = float(parts[2])
@@ -61,7 +67,8 @@ def getEvents(args):
         event['np2rake'] = float(parts[8])
         event['energy'] = float(parts[9])
         me = (2.0/3.0) * (math.log10(event['energy']) - 4.4)
-        event['mag'] = round(me*10.0)/10.0
+        mag = {'mag':round(me*10.0)/10.0,'method':'Me','evalstatus':'reviewed','evalmode':'manual'}
+        event['magnitude'] = [mag]
         yield event
 
 if __name__ == '__main__':
