@@ -40,7 +40,8 @@ def getEvents(args,startDate=None,endDate=None):
         eqdict['depth'] = float(parts[7])
         eqdict['deptherror'] = float(parts[8])
         eqdict['depthquality'] = parts[9]
-        eqdict['mag'] = float(parts[10])
+        mag = {'mag':float(parts[10]),'method':'Mw','evalstatus':'reviewed','evalmode':'manual'}
+        eqdict['magnitude'] = [mag]
         eqdict['magerror'] = float(parts[11])
         eqdict['magquality'] = parts[12].strip()
         eqdict['id'] = parts[23].strip()
