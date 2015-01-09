@@ -37,7 +37,7 @@ def getEvents(args,startDate=None,endDate=None):
             eqdict['strike'] = float('nan')
                 
         eqdict['locquality'] = parts[6].strip()
-        eqdict['depth'] = float(parts[7])
+        eqdict['depth'] = float(parts[7])*1000
         eqdict['deptherror'] = float(parts[8])
         eqdict['depthquality'] = parts[9]
         mag = {'mag':float(parts[10]),'method':'Mw','evalstatus':'reviewed','evalmode':'manual'}
