@@ -195,6 +195,8 @@ if __name__ == '__main__':
             else:
                 nelapsed = (datetime.datetime.utcnow() - event['time']).days
                 res,output,errors = quake.push(quakemlfile,nelapsed=nelapsed)
+                if nelapsed >= 31:
+                    res,output,errors = quake.push(quakemlfile,nelapsed=29) #if it's older than 30 days, send to regular PDL also
             if res:
                 print output
             else:
