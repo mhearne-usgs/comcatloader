@@ -127,6 +127,7 @@
         <evaluationStatus>[EVALSTATUS]</evaluationStatus>
       </focalMechanism>
       [MAGNITUDES]
+      <preferredOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[TRIGGERID]</preferredOriginID>
       <origin publicID="quakeml:[CONTRIBUTOR].anss.org/origin/[TRIGGERID]">
         <time>
           <value>[TRIGGERTIME]</value>
@@ -137,8 +138,10 @@
         <latitude>
           <value>[TRIGGERLAT]</value>
         </latitude>
+        <depth>
+          <value>[TRIGGERDEPTH]</value>
+        </depth>
       </origin>
-      <preferredOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]</preferredOriginID>
       <origin publicID="quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]">
         <time>
           <value>[TIME]</value>

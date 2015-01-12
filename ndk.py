@@ -67,6 +67,11 @@ class NDKReader(MTReader):
         record['lon'] = tdict['derivedEventLongitude']
         record['depth'] = tdict['derivedEventDepth']
 
+        record['triggertime'] = tdict['eventTime']
+        record['triggerlat'] = tdict['eventLatitude']
+        record['triggerlon'] = tdict['eventLongitude']
+        record['triggerdepth'] = tdict['eventDepth']
+
         #call the source epicenter and time triggerlat,triggerlon, etc.
         record['triggertime'] = tdict['eventTime']
         record['triggerlat'] = tdict['eventLatitude']
