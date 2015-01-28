@@ -22,18 +22,14 @@
           <usedStationCount>[NSTATIONS]</usedStationCount>
           <azimuthalGap>[GAP]</azimuthalGap>
         </quality>
-			</origin>
+        <creationInfo>
+  				<agencyID>[AGENCY]</agencyID>
+	  			<creationTime>[CTIME]</creationTime>
+		  	</creationInfo>
+      </origin>
 			<preferredOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[CATALOG][ID]</preferredOriginID>
 			<preferredMagnitudeID>[PREFMAGID]</preferredMagnitudeID>
 			<type>earthquake</type>
-			<creationInfo>
-				<agencyID>[AGENCY]</agencyID>
-				<creationTime>[CTIME]</creationTime>
-			</creationInfo>
-		</event>
-		<creationInfo>
-			<agencyID>[AGENCY]</agencyID>
-			<creationTime>[CTIME]</creationTime>
-		</creationInfo>
+    </event>
 	</eventParameters>
 </q:quakeml>

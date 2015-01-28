@@ -9,4 +9,7 @@
   <comment>
     [MAGCOMMENT]
   </comment>
+  <creationInfo>
+    <agencyID>[AGENCY]</agencyID>
+  </creationInfo>
 </magnitude>
