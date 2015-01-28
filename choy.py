@@ -58,7 +58,7 @@ def getEvents(args,startDate=None,endDate=None):
         event['id'] = time.strftime('%Y%m%d%H%M%S')
         event['lat'] = float(parts[0])
         event['lon'] = float(parts[1])
-        event['depth'] = float(parts[2])
+        event['depth'] = float(parts[2])*1000
         event['np1strike'] = float(parts[3])
         event['np1dip'] = float(parts[4])
         event['np1rake'] = float(parts[5])

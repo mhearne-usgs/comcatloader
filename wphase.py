@@ -51,6 +51,12 @@ def getEvents(args,startDate=None,endDate=None):
         event['lat'] = float(parts[9])
         event['lon'] = float(parts[10])
         event['depth'] = float(parts[11])*1000
+        #we need to fill in all of the trigger origin elements
+        event['triggerlat'] = event['lat']
+        event['triggerlon'] = event['lon']
+        event['triggerdepth'] = event['depth']
+        event['triggertime'] = event['time']
+        
         event['mrr'] = float(parts[12])/1.0e7 #convert these values from dyne-cm units to N-m
         event['mtt'] = float(parts[13])/1.0e7
         event['mpp'] = float(parts[14])/1.0e7
