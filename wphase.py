@@ -22,6 +22,7 @@ def getEvents(args,startDate=None,endDate=None):
         event = {}
         parts = line.strip().split()
         event['id'] = parts[0]
+        event['triggerid'] = event['id']
         date = parts[1]
         time = parts[2]
         dtime = '%s %s' % (date,time)
