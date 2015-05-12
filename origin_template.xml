@@ -31,5 +31,9 @@
 			<preferredMagnitudeID>[PREFMAGID]</preferredMagnitudeID>
 			<type>earthquake</type>
     </event>
+    <creationInfo>
+  		<agencyID>[AGENCY]</agencyID>
+	  	<creationTime>[CTIME]</creationTime>
+		</creationInfo>
 	</eventParameters>
 </q:quakeml>
