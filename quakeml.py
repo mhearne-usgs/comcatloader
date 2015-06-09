@@ -758,6 +758,7 @@ class QuakeML(object):
         xmloutput = xmloutput.replace('eventid','catalog:eventid')
         xmloutput = xmloutput.replace('eventsource','catalog:eventsource')
         xmloutput = xmloutput.replace('datasource','catalog:datasource')
+        xmloutput = xmloutput.replace('dataid','catalog:dataid')
         
         return xmloutput
 

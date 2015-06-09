@@ -9,6 +9,8 @@ import socket
 import string
 import argparse
 import textwrap
+import math
+from collections import OrderedDict
 
 #local imports
 from neicio.tag import Tag
@@ -59,7 +61,7 @@ class StationTranslator(object):
             while True:
                 tresp = s.recv(10241)
                 response += tresp
-                if tresp.find('<EOR>') > -1:
+                if response.find('<EOR>') > -1:
                     break
 
 
@@ -282,13 +284,15 @@ def readMagnitudeLine(event,line):
     return event
 
 def readPhaseLine(event,line,st):
+    #refactoring the phase list into a phase dictionary, to handle duplicate instances of station-phase pairs.
+    #We wants the *second* instance of these, which requires that I keep a dictionary of phases instead of a 
+    #list.  Grr.
     parts = line[1:].split()
     phase = {}
     phase['id'] = datetime.utcnow() #this will be used to link together picks and arrivals
     phase['usage'] = USAGE[parts[0]]
     station = parts[1]
     phase['name'] = parts[4]
-    #phase['sta'] = parts[1]
     phase['distance'] = float(parts[2])
     phase['azimuth'] = int(parts[3])
     year = int(parts[5])
@@ -298,7 +302,7 @@ def readPhaseLine(event,line,st):
     minute = int(parts[9])
     second = float(parts[10])
     microsecond = int((second - int(second))*1e6)
-    second = int(second) - 1
+    second = int(second) - 1 #assumption here is that input seconds are 1 to 60
     if second == -1: #sometimes seconds are 0 to 59, sometimes 1 to 60.  Not my problem.
         second = 0
     phase['time'] = datetime(year,month,day,hour,minute,second,microsecond)
@@ -311,10 +315,12 @@ def readPhaseLine(event,line,st):
     phase['precision'] = int(parts[11])
     phase['residual'] = float(parts[12])
     phase['error'] = float(parts[13])
+    phasekey = phase['sta']+'_'+phase['name']
+    #if we have the phase already in the file, we'll replace it, which is easy.
     if event.has_key('phases'):
-        event['phases'].append(phase.copy())
+        event['phases'][phasekey] = phase.copy()
     else:
-        event['phases'] = [phase.copy()]
+        event['phases'] = {phasekey:phase.copy()}
     return event
 
 def createMagTag(event):
@@ -408,6 +414,50 @@ def createOriginTag(event,studyname):
     depthtag.addChild(depthlowertag)
     depthtag.addChild(depthuppertag)
     depthtag.addChild(depthtypetag)
+
+    #quality
+    stationlist = []
+    nphases = 0
+    azlist = []
+    rmslist = []
+    mindist = 999999999999
+    for phasekey,phase in event['phases'].iteritems():
+        if not phase['usage']:
+            continue
+        nphases += 1
+        if phase['sta'] not in stationlist:
+            stationlist.append(phase['sta'])
+        rmslist.append(phase['residual'])
+        if phase['distance'] < mindist:
+            mindist = phase['distance']
+        azlist.append(phase['azimuth'])
+
+    azlist = sorted(azlist)
+    resmean = sum(rmslist)/len(rmslist)
+    sumsquares = sum([math.pow(xi - resmean,2) for xi in rmslist])
+    stderr = math.sqrt(sumsquares/len(rmslist))
+    gap = azlist[0] + 360.0 - azlist[-1]
+    for i in range(1,len(azlist)):
+        dt = azlist[i] - azlist[i-1]
+        if dt > gap:
+            gap = dt
+    nstations = len(stationlist)
+    qualitytag = Tag('quality')
+    phasecounttag = Tag('usedPhaseCount',data = '%i' % nphases)
+    stationcounttag = Tag('usedStationCount',data = '%i' % nstations)
+    stderrtag = Tag('standardError',data = '%.2f' % stderr)
+    gaptag = Tag('azimuthalGap',data = '%i' % int(gap))
+    disttag = Tag('minimumDistance',data = '%.2f' % mindist)
+
+    qualitytag.addChild(phasecounttag)
+    qualitytag.addChild(stationcounttag)
+    qualitytag.addChild(stderrtag)
+    qualitytag.addChild(gaptag)
+    qualitytag.addChild(disttag)
+
+    #evaluation status and mode
+    evaltag = Tag('evaluationStatus',data='reviewed')
+    modetag = Tag('evaluationMode', data='manual')
     
     #creation info
     origincreationtag = Tag('creationInfo')
@@ -420,14 +470,18 @@ def createOriginTag(event,studyname):
     origintag.addChild(lattag)
     origintag.addChild(lontag)
     origintag.addChild(depthtag)
+    origintag.addChild(qualitytag)
+    origintag.addChild(evaltag)
+    origintag.addChild(modetag)
     origintag.addChild(origincreationtag)
 
     return (origintag,originid)
 
 def createArrivalTag(phase,eventid):
-    arrid = 'quakeml:us.anss.org/arrival/%s/us_%s' % (eventid,phase['id'].strftime('%s'))
+    picktime = phase['id'].strftime('%s')+'.'+phase['id'].strftime('%f')
+    arrid = 'quakeml:us.anss.org/arrival/%s/us_%s' % (eventid,picktime)
     arrivaltag = Tag('arrival',attributes={'publicID':arrid})
-    pickid = 'quakeml:us.anss.org/pick/%s/us_%s' % (eventid,phase['id'].strftime('%s'))
+    pickid = 'quakeml:us.anss.org/pick/%s/us_%s' % (eventid,picktime)
     pickidtag = Tag('pickID',data=pickid)
     phasetag = Tag('phase',data=phase['name'])
     azimuthtag = Tag('azimuth',data='%.2f' % (phase['azimuth']))
@@ -435,17 +489,19 @@ def createArrivalTag(phase,eventid):
     residualtag = Tag('timeResidual',data='%.2f' % (phase['residual']))
     weighttag = Tag('timeWeight',data='%i' % (phase['usage']))
 
+    
     arrivaltag.addChild(pickidtag)
     arrivaltag.addChild(phasetag)
     arrivaltag.addChild(azimuthtag)
     arrivaltag.addChild(distancetag)
     arrivaltag.addChild(residualtag)
     arrivaltag.addChild(weighttag)
-
+    
     return arrivaltag
 
 def createPickTag(phase,eventid):
-    pickid = 'quakeml:us.anss.org/pick/%s/us_%s' % (eventid,phase['id'].strftime('%s'))
+    picktime = phase['id'].strftime('%s')+'.'+phase['id'].strftime('%f')
+    pickid = 'quakeml:us.anss.org/pick/%s/us_%s' % (eventid,picktime)
     picktag = Tag('pick',attributes={'publicID':pickid})
     timetag = Tag('time')
     timevaluetag = Tag('value',data=phase['time'].strftime(TIMEFMT+'Z'))
@@ -462,10 +518,12 @@ def createPickTag(phase,eventid):
         attributes['locationCode'] = location
     wavetag = Tag('waveformID',attributes=attributes)
     hinttag = Tag('phaseHint',data=phase['name']) #duplicate of arrival->phase (??)
+    evaltag = Tag('evaluationMode',data='manual')
 
     picktag.addChild(timetag)
     picktag.addChild(wavetag)
     picktag.addChild(hinttag)
+    picktag.addChild(evaltag)
     return picktag
 
 def createEventTag(event,studyname):
@@ -502,7 +560,7 @@ def createEventTag(event,studyname):
     eventtag.addChild(preferredtag)
     eventtag.addChild(prefmagtag)
 
-    for phase in event['phases']:
+    for phasekey,phase in event['phases'].iteritems():
         arrivaltag = createArrivalTag(phase,event['id'])
         picktag = createPickTag(phase,event['id'])
         eventtag.addChild(picktag)
@@ -521,7 +579,6 @@ def createEventTag(event,studyname):
 
     return (quaketag,prefmag)
 
-
 def main(args):
     qomfile = args.qomfile
     outfolder = args.outfolder
@@ -532,6 +589,9 @@ def main(args):
     event = {}
     i = 1
     comment = ''
+    nphases = 0
+    phaselist = []
+    
     for line in f.readlines():
         if line.startswith('L'):
             event = readLayerLine(event,line)
@@ -546,6 +606,8 @@ def main(args):
         if line.startswith('M'):
             event = readMagnitudeLine(event,line)
         if line.startswith('P'):
+            #sys.stderr.write('reading phase line %i ("%s")\n' % (nphases+1,line))
+            nphases += 1
             event = readPhaseLine(event,line,st)
         if line.startswith('STOP'):
             events.append(event.copy())
@@ -590,7 +652,7 @@ def main(args):
         if prefmag > magmax:
             magmax = prefmag
         
-        fname = os.path.join(outfolder,event['id']+'.xml')
+        fname = os.path.join(outfolder,SOURCE+event['id']+'.xml')
         #etag.renderToXML(fname)
         xmlstr = etag.renderTag(0)
         xmlstr = xmlstr.replace('\t','')
