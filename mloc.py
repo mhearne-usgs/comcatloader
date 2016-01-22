@@ -11,6 +11,9 @@ import argparse
 import textwrap
 import math
 from collections import OrderedDict
+import urllib2
+import json
+
 
 #local imports
 from neicio.tag import Tag
@@ -18,12 +21,18 @@ from neicio.tag import Tag
 CWBHOST = 'cwbpub.cr.usgs.gov'
 CWBPORT = 2052
 
+MINMAG = 4.0
+
+URLBASE = 'http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=[START]&endtime=[END]&latitude=[LAT]&longitude=[LON]&maxradiuskm=[RAD]'
+RADIUS = 10 #km around an epicenter to search for matching earthquake
+TIMEDELTA = 3 #seconds around an origin time to search for matching earthquake
+
 SOURCE = 'rde'
 
 TIMERROR = 5 #how many days can the phase time be from a given station epoch before we don't consider it to be part of that epoch 
 
 TIMEFMT = '%Y-%m-%dT%H:%M:%S'
-USAGE = {'+':1,'x':0}
+USAGE = {'+':1,'x':0,'-':0}
 DEPTHTYPES = {'c':'operator assigned',
               'd':'constrained by depth phases',
               'e':'other',
@@ -209,6 +218,35 @@ class StationTranslator(object):
         self.stationdict[stationkey] = preferred
         return preferred
 
+def getPrefMag(event):
+    url = URLBASE.replace('[RAD]','%i' % RADIUS)
+    url = url.replace('[LAT]','%.4f' % event['lat'])
+    url = url.replace('[LON]','%.4f' % event['lon'])
+    stime = event['time'] - timedelta(seconds=TIMEDELTA)
+    etime = event['time'] + timedelta(seconds=TIMEDELTA)
+    url = url.replace('[START]','%s' % stime.strftime(TIMEFMT))
+    url = url.replace('[END]','%s' % etime.strftime(TIMEFMT))
+    try:
+        fh = urllib2.urlopen(url)
+    except:
+        pass
+    data = fh.read()
+    fh.close()
+    jdict = json.loads(data)
+    if not jdict.has_key('features') or len(jdict['features']) > 1 or len(jdict['features']) == 0:
+        #raise Exception,'No or multiple events found for %s M%.1f' % (event['time'],event['magnitude'])
+        print 'No event matching %s M%.1f' % (event['time'],event['magnitude'][0]['magnitude'])
+        return None
+    try:
+        pevent = jdict['features'][0]
+    except:
+        pass
+    etime = datetime.utcfromtimestamp(pevent['properties']['time']/1000)
+    elon,elat,edep = pevent['geometry']['coordinates']
+    emag = pevent['properties']['mag']
+    prefmag = emag
+    return prefmag
+    
 def readLayerLine(event,line):
     depth,vp,vs = [float(p) for p in line[1:].strip().split()]
     if event.has_key('layer'):
@@ -290,7 +328,10 @@ def readPhaseLine(event,line,st):
     parts = line[1:].split()
     phase = {}
     phase['id'] = datetime.utcnow() #this will be used to link together picks and arrivals
-    phase['usage'] = USAGE[parts[0]]
+    try:
+        phase['usage'] = USAGE[parts[0]]
+    except:
+        pass
     station = parts[1]
     phase['name'] = parts[4]
     phase['distance'] = float(parts[2])
@@ -487,7 +528,7 @@ def createArrivalTag(phase,eventid):
     azimuthtag = Tag('azimuth',data='%.2f' % (phase['azimuth']))
     distancetag = Tag('distance',data='%.2f' % (phase['distance']))
     residualtag = Tag('timeResidual',data='%.2f' % (phase['residual']))
-    weighttag = Tag('timeWeight',data='%i' % (phase['usage']))
+    weighttag = Tag('timeWeight',data='%.2f' % (phase['error']))
 
     
     arrivaltag.addChild(pickidtag)
@@ -583,6 +624,9 @@ def main(args):
     qomfile = args.qomfile
     outfolder = args.outfolder
 
+    if not os.path.isdir(outfolder):
+        os.makedirs(outfolder)
+    
     st = StationTranslator(dictionaryfile=args.dictionary)
     f = open(qomfile,'rt')
     events = []
@@ -611,13 +655,21 @@ def main(args):
             event = readPhaseLine(event,line,st)
         if line.startswith('STOP'):
             events.append(event.copy())
-            i += 1
             sys.stderr.write('Parsed event %i\n' % i)
+            i += 1
             sys.stderr.flush()
             event = {}
     f.close()
     print 'Read %i events' % len(events)
 
+    #try to find the best magnitude from comcat for the larger events
+    for event in events:
+        if event['magnitude'][0]['magnitude'] > MINMAG:
+            prefmag = getPrefMag(event)
+            if prefmag is not None:
+                print 'For event %s, switching magnitude M%.1f to M%.1f' % (event['time'],event['magnitude'][0]['magnitude'],prefmag)
+                event['magnitude'][0]['magnitude'] = prefmag
+    
     dictfile = 'stationcodes.dat'
     print 'Saving dictionary of station codes to %s' % dictfile
     st.save(dictfile)
@@ -661,22 +713,22 @@ def main(args):
         f.write(xmlstr)
         f.close()
 
-    studyname = args.studyname
-    authors = args.studyname.split(',')
-    desc = args.description
-    email = args.contactemail
-    name = args.contactname
+    # studyname = args.studyname
+    # authors = args.authors.split(',')
+    # desc = args.description
+    # email = args.contactemail
+    # name = args.contactname
     if args.pubid:
         pubid = args.pubid
-    print 
-    print 'Catalog Name: %s' % args.studyname
-    print 'Catalog Authors: %s' % ', '.join(args.authors.split(','))
-    print 'Point of Contact: %s, %s' % (args.contactname,args.contactemail)
-    print 'Short Description: %s' % (args.description)
-    print 'Time Span: %s to %s' % (tmin.strftime(TIMEFMT),tmax.strftime(TIMEFMT))
-    print 'Spatial Domain: Latitude %.4f to %.4f, Longitude %.4f to %.4f' % (latmin,latmax,lonmin,lonmax)
-    print 'Magnitude Range: %.1f to %.1f' % (magmin,magmax)
-    print 'Detailed Description:\n%s' % textwrap.fill(comment,80)
+    # print 
+    # print 'Catalog Name: %s' % args.studyname
+    # print 'Catalog Authors: %s' % ', '.join(args.authors.split(','))
+    # print 'Point of Contact: %s, %s' % (args.contactname,args.contactemail)
+    # print 'Short Description: %s' % (args.description)
+    # print 'Time Span: %s to %s' % (tmin.strftime(TIMEFMT),tmax.strftime(TIMEFMT))
+    # print 'Spatial Domain: Latitude %.4f to %.4f, Longitude %.4f to %.4f' % (latmin,latmax,lonmin,lonmax)
+    # print 'Magnitude Range: %.1f to %.1f' % (magmin,magmax)
+    # print 'Detailed Description:\n%s' % textwrap.fill(comment,80)
     
 if __name__ == '__main__':
     desc = "Create QuakeML files and metadata output for an input RDE relocation cluster file"
@@ -688,14 +740,14 @@ if __name__ == '__main__':
                         help='Output folder where QuakeML files will be written')
     parser.add_argument('studyname', 
                         help='Short name of study (mineral2011) - will be prepended with rde and used as ComCat catalog name.')
-    parser.add_argument('authors', 
-                        help='Comma separated list of authors (surround with quotes).')
-    parser.add_argument('description', 
-                        help='One-line description of study.')
-    parser.add_argument('contactemail', 
-                        help='Email of main point of contact.')
-    parser.add_argument('contactname', 
-                        help='Name of main point of contact.')
+    # parser.add_argument('authors', 
+    #                     help='Comma separated list of authors (surround with quotes).')
+    # parser.add_argument('description', 
+    #                     help='One-line description of study.')
+    # parser.add_argument('contactemail', 
+    #                     help='Email of main point of contact.')
+    # parser.add_argument('contactname', 
+    #                     help='Name of main point of contact.')
     parser.add_argument('-p','--pubid', dest='pubid', 
                         help='(Optional) doi number.')
     parser.add_argument('-d','--dictionary', dest='dictionary', 

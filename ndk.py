@@ -81,10 +81,11 @@ class NDKReader(MTReader):
 
         #magnitude is now a list of dictionaries
         #each element of list should have keys: mag,method,evalstatus,evalmode
-        if tdict['timestamp'].find('Q') > -1:
-            evalstatus = 'preliminary'
-        else:
-            evalstatus = 'reviewed'
+        # if tdict['timestamp'].find('Q') > -1:
+        #     evalstatus = 'preliminary'
+        # else:
+        #     evalstatus = 'reviewed'
+        evalstatus = 'reviewed' #it has been decided that even the "quick" solutions are reviewed, in this context.
         
         mag1 = {'mag':tdict['momentMagnitude'],'method':'Mwc','evalstatus':evalstatus,'evalmode':'manual'}
         record['magnitude'] = [mag1]

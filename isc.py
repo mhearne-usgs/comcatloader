@@ -13,6 +13,11 @@ def getEvents(args,startDate=None,endDate=None):
         if line.strip().startswith('#'):
             continue
         parts = line.split(',')
+        #some of these are missing magnitudes
+        try:
+            float(parts[10])
+        except ValueError:
+            continue
         eqdict = {}
         timestr = parts[0].strip()
         eqdict['time'] = datetime.datetime.strptime(timestr,TIMEFMT)

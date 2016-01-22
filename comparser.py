@@ -9,7 +9,7 @@ import importlib
 from xml.dom import minidom
 
 #local imports
-import quakeml
+import comquakeml
 
 TIMEFMT = '%Y-%m-%d %H:%M:%S'
 DEFAULT_START = datetime.datetime(1000,1,1)
@@ -161,7 +161,7 @@ def main(options,args):
     agency = ''
     if options.agency is not None:
         agency = options.agency
-    contributor = quakeml.DEFAULT_SOURCE
+    contributor = comquakeml.DEFAULT_SOURCE
     triggersource = None
     method = None
     ptype = 'origin'
@@ -191,12 +191,12 @@ def main(options,args):
             print 'Could not parse end date "%s"' % options.endDate
             sys.exit(1)
     if options.producttype is not None:
-        types = [quakeml.ORIGIN,quakeml.FOCAL,quakeml.TENSOR]
+        types = [comquakeml.ORIGIN,comquakeml.FOCAL,comquakeml.TENSOR]
         ptype = options.producttype
         if ptype not in types:
             print '%s not in %s.  Exiting.' % (ptype,','.join(types))
             sys.exit(1)
-    quake = quakeml.QuakeML(ptype,folder,catalog=catalog,agency=agency,
+    quake = comquakeml.QuakeML(ptype,folder,catalog=catalog,agency=agency,
                             triggersource=triggersource,contributor=contributor,
                             method=method,timewindow=twindow,distwindow=dwindow)
     if options.clear:
@@ -272,7 +272,7 @@ def main(options,args):
         
         
 if __name__ == '__main__':
-    types = [quakeml.ORIGIN,quakeml.FOCAL,quakeml.TENSOR]
+    types = [comquakeml.ORIGIN,comquakeml.FOCAL,comquakeml.TENSOR]
     usage = '''usage: %prog [options] modulefile arg2 ... argN'''
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-a", "--agency", dest="agency",
@@ -303,7 +303,7 @@ if __name__ == '__main__':
                   help="""Specify ending date for loading from input catalog
     (YYYYMMDD) (defaults to 30000101)""",metavar="ENDDATE")
     parser.add_option("-p", "--producttype", dest="producttype",
-                  help="Define type of product (one of %s) (default to %s)" % (','.join(types),quakeml.ORIGIN), 
+                  help="Define type of product (one of %s) (default to %s)" % (','.join(types),comquakeml.ORIGIN), 
                   metavar="PRODUCTTYPE")
     parser.add_option("-c", "--clear",
                   action="store_true", dest="clear", default=False,

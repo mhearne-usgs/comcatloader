@@ -15,7 +15,7 @@ import argparse
 import string
 
 #local imports
-import quakeml
+import comquakeml
 import ndk
 
 QUICKURL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_QUICK/qcmt.ndk'
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     homedir = os.path.dirname(os.path.abspath(__file__)) #where is this script?
-    quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',method='Mww',
+    quake = comquakeml.QuakeML(comquakeml.TENSOR,'ndk',method='Mww',
                             contributor='us',catalog=None,agency='us',
                             triggersource='us')
 

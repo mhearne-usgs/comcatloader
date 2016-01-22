@@ -4,7 +4,7 @@
            catalog:datasource="[CONTRIBUTOR]"
            publicID="quakeml:[CONTRIBUTOR].anss.org/event/[ID]">
       <preferredMagnitudeID>[PREFMAGID]</preferredMagnitudeID>
-      <focalMechanism publicID="quakeml:[CONTRIBUTOR].anss.org/focalMechanism/[ID]/[METHOD]">
+      <focalMechanism publicID="quakeml:[CONTRIBUTOR].anss.org/focalMechanism/[ID]/[METHOD]" catalog:dataid="[CATALOG]_[ID]_[METHOD]">
         <triggeringOriginID>quakeml:[CONTRIBUTOR].anss.org/origin/[TRIGGERID]</triggeringOriginID>
         <momentTensor publicID="quakeml:[CONTRIBUTOR].anss.org/momentTensor/[ID]/[METHOD]">
           <category>[MOMENTCATEGORY]</category>
