@@ -72,6 +72,7 @@ FORMATS = {'id':'%s',
            'agency':'%s',
            'version':'%s',
            'method':'%s',
+           'lowermethod':'%s',
            'ctime':TIMEFMT,
            'source':'%s',
            'triggersource':'%s',
@@ -260,6 +261,7 @@ class QuakeML(object):
         self.catalog = catalog
         self.source = source
         self.method = method
+        self.lowermethod = method.lower()
         self.contributor = contributor
         self.agency = agency
         self.triggersource = triggersource
@@ -488,6 +490,8 @@ class QuakeML(object):
         eqdict['source'] = self.source
         if not eqdict.has_key('method'):
             eqdict['method'] = self.method
+        if not eqdict.has_key('lowermethod'):
+            eqdict['lowermethod'] = self.lowermethod
         eqdict['catalog'] = self.catalog #this may be None
         eqdict['triggersource'] = self.triggersource
         eqdict['contributor'] = self.contributor
