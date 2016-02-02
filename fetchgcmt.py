@@ -15,7 +15,7 @@ import argparse
 import calendar
 
 #local imports
-import quakeml
+import comquakeml
 import ndk
 
 QUICKURL = 'http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_QUICK/qcmt.ndk'
@@ -172,7 +172,7 @@ if __name__ == '__main__':
         f.close()
 
 
-    quake = quakeml.QuakeML(quakeml.TENSOR,'ndk',method='Mwc',
+    quake = comquakeml.QuakeML(comquakeml.TENSOR,'ndk',method='Mwc',
                             contributor='us',catalog='gcmt',
                             triggersource='pde',agency='gcmt')
 
