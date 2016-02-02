@@ -92,6 +92,11 @@ class NDKReader(MTReader):
 
         #get the scalar moment in here
         record['moment'] = tdict['scalarMoment']
+
+        #for complicated reasons, the web pages use "evaluationMode" to determine review status.
+        #setting both here
+        record['evalmode'] = 'manual'
+        record['evalstatus'] = 'reviewed'
         
         record['tazimuth'] = tdict['eigenVectorAzimuths'][0]
         record['tplunge'] = tdict['eigenVectorPlunges'][0]
