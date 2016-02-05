@@ -155,6 +155,8 @@
         <depth>
           <value>[DEPTH]</value>
         </depth>
+        <evaluationMode>[EVALMODE]</evaluationMode>
+        <evaluationStatus>[EVALSTATUS]</evaluationStatus>
       </origin>
       <type>earthquake</type>
     </event>
